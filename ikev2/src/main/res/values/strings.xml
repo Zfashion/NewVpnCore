@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="error_assessment_failed">Security assessment failed</string>
+    <string name="error_auth_failed">User authentication failed</string>
+    <string name="error_peer_auth_failed">Verifying server authentication failed</string>
+    <string name="error_lookup_failed">Server address lookup failed</string>
+    <string name="error_unreachable">Server is unreachable</string>
+    <string name="error_password_missing">Password unavailable</string>
+    <string name="error_certificate_unavailable">Client certificate unavailable</string>
+    <string name="error_generic">Unspecified failure while connecting</string>
+
+</resources>
