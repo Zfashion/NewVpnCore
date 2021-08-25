@@ -55,6 +55,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlinVersion")
     implementation ("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version")
 
+    implementation(project(mapOf("path" to ":ikev2")))
     implementation(project(mapOf("path" to ":openvpn")))
     implementation(project(mapOf("path" to ":unitevpn")))
 }

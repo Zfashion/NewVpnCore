@@ -1,2 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources></resources>
+<resources>
+    <string name="notification_channel_description">Provides information about the VPN connection state and serves as permanent notification to keep the VPN service running in the background.</string>
+
+    <string name="status_connected">Connected</string>
+    <string name="status_not_connected">Not Connected</string>
+    <string name="status_disconnecting">Disconnecting</string>
+    <string name="status_connecting">Connecting</string>
+    <string name="status_connect_fail">Connect fail</string>
+
+    <string name="unite_bits_per_second">%.0f bit/s</string>
+    <string name="unite_kbits_per_second">%.1f kbit/s</string>
+    <string name="unite_mbits_per_second">%.1f Mbit/s</string>
+    <string name="unite_gbits_per_second">%.1f Gbit/s</string>
+
+    <string name="unite_volume_byte">%.0f B</string>
+    <string name="unite_volume_kbyte">%.1f kB</string>
+    <string name="unite_volume_mbyte">%.1f MB</string>
+    <string name="unite_volume_gbyte">%.1f GB</string>
+
+    <string name="unite_statusline_bytecount">↓%2$s %1$s - ↑%4$s %3$s</string>
+
+</resources>

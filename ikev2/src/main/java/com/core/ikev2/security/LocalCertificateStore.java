@@ -42,10 +42,10 @@ public class LocalCertificateStore
 	private static final String ALIAS_PREFIX = "local:";
 	private static final Pattern ALIAS_PATTERN = Pattern.compile("^" + ALIAS_PREFIX + "[0-9a-f]{40}$");
 
-	private static SoftReference<Context> softReference;
+	private static Context context;
 
-	public static void setSoftContext(Context context) {
-		softReference = new SoftReference<>(context);
+	public static void setContext(Context context) {
+		LocalCertificateStore.context = context;
 	}
 
 	/**
@@ -68,8 +68,8 @@ public class LocalCertificateStore
 		try
 		{
 			/* we replace any existing file with the same alias */
-			if (softReference.get() != null) {
-				out = softReference.get().openFileOutput(FILE_PREFIX + keyid, Context.MODE_PRIVATE);
+			if (context != null) {
+				out = context.openFileOutput(FILE_PREFIX + keyid, Context.MODE_PRIVATE);
 				try
 				{
 					out.write(cert.getEncoded());
@@ -107,8 +107,8 @@ public class LocalCertificateStore
 		if (ALIAS_PATTERN.matcher(alias).matches())
 		{
 			alias = alias.substring(ALIAS_PREFIX.length());
-			if (softReference.get() != null) {
-				softReference.get().deleteFile(FILE_PREFIX + alias);
+			if (context != null) {
+				context.deleteFile(FILE_PREFIX + alias);
 			}
 		}
 	}
@@ -127,8 +127,8 @@ public class LocalCertificateStore
 		alias = alias.substring(ALIAS_PREFIX.length());
 		try
 		{
-			if (softReference.get() != null) {
-				FileInputStream in = softReference.get().openFileInput(FILE_PREFIX + alias);
+			if (context != null) {
+				FileInputStream in = context.openFileInput(FILE_PREFIX + alias);
 				try
 				{
 					CertificateFactory factory = CertificateFactory.getInstance("X.509");
@@ -171,8 +171,8 @@ public class LocalCertificateStore
 			return null;
 		}
 		alias = alias.substring(ALIAS_PREFIX.length());
-		if (softReference.get() != null) {
-			File file = softReference.get().getFileStreamPath(FILE_PREFIX + alias);
+		if (context != null) {
+			File file = context.getFileStreamPath(FILE_PREFIX + alias);
 			return file.exists() ? new Date(file.lastModified()) : null;
 		}
 		else return null;
@@ -185,8 +185,8 @@ public class LocalCertificateStore
 	public ArrayList<String> aliases()
 	{
 		ArrayList<String> list = new ArrayList<String>();
-		if (softReference.get() != null) {
-			for (String file : softReference.get().fileList())
+		if (context != null) {
+			for (String file : context.fileList())
 			{
 				if (file.startsWith(FILE_PREFIX))
 				{

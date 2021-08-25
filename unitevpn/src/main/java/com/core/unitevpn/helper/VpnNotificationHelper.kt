@@ -9,7 +9,7 @@ import com.core.unitevpn.inter.NotificationImpl
 import com.core.unitevpn.obj.DefaultNotification
 import com.core.unitevpn.obj.DefaultNotificationChannel
 
-object NotificationHelper {
+object VpnNotificationHelper {
 
     lateinit var defNotification : NotificationImpl
 

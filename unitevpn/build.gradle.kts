@@ -43,8 +43,8 @@ dependencies {
     androidTestImplementation("androidx.test.ext:junit:1.1.3")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
 
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlinVersion")
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinVersion")
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlinVersion")
 
     //Startup
     implementation("androidx.startup:startup-runtime:1.1.0")

@@ -1,4 +1,4 @@
-package com.core.unitevpn.`interface`
+package com.core.unitevpn.inter
 
 import android.app.Notification
 import android.content.Context
