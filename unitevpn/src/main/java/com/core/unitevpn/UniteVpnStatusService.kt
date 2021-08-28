@@ -13,7 +13,9 @@ import com.core.unitevpn.base.Type
 import com.core.unitevpn.base.VpnStatus
 import com.core.unitevpn.base.VpnStatus.Status
 import com.core.unitevpn.common.doMainJob
+import com.core.unitevpn.common.statusToString
 import com.core.unitevpn.entity.AutoCombineInfo
+import com.core.unitevpn.entity.Connection
 import com.core.unitevpn.inter.VpnImpl
 import com.core.unitevpn.sdk.UniteVpnSdk
 import com.core.unitevpn.utils.VPNLog
@@ -67,7 +69,7 @@ class UniteVpnStatusService : Service() {
         if (intent == null) return super.onStartCommand(intent, flags, startId)
         if (intent.action == ACTION_START_FOREGROUND_SERVICE) {
             //展示通知
-            val showNotification = showNotification()
+            val showNotification = showNotification(VpnStatus.getCurStatus())
             startForeground(NOTIFY_ID, showNotification)
             return START_NOT_STICKY
         }
@@ -93,9 +95,16 @@ class UniteVpnStatusService : Service() {
         }
     }
 
-    private fun showNotification(): Notification {
+    private fun showNotification(@Status status: Int): Notification {
         val notification =
-            UniteVpnManager.notifyHelper.defNotification.impl(this, VpnStatus.getCurStatus())
+            UniteVpnManager.notifyHelper.defNotification.impl(this, status)
+        notificationManager.notify(NOTIFY_ID, notification)
+        return notification
+    }
+
+    private fun showNotification(@Status status: Int, speedIn: Long, speedOut: Long, diffIn: Long, diffOut: Long): Notification {
+        val notification =
+            UniteVpnManager.notifyHelper.defNotification.impl(this, status, speedIn, speedOut, diffIn, diffOut)
         notificationManager.notify(NOTIFY_ID, notification)
         return notification
     }
@@ -128,17 +137,23 @@ class UniteVpnStatusService : Service() {
         val autoInfo = connectList.poll()
         autoInfo?.let {
             checkType(it.type)
+            executeRealConnect(it.conn)
         }
     }
 
-    private fun checkType(type: Type.VpnType) {
+    private fun executeRealConnect(conn: List<Connection>) {
+        vpnImpl.connect(conn)
+        UniteVpnManager.notifyStatus(VpnStatus.CONNECTING)
+    }
+
+    private fun checkType(type: Type) {
         if (this::vpnImpl.isInitialized) {
             if (vpnImpl.type == type) return
         }
         createVpnImpl(type)
     }
 
-    private fun createVpnImpl(type: Type.VpnType) {
+    private fun createVpnImpl(type: Type) {
         //已实例化的VPNImpl需检查状态，并销毁
         if (this::vpnImpl.isInitialized) {
             if (vpnImpl.isActive) {
@@ -146,17 +161,25 @@ class UniteVpnStatusService : Service() {
             }
             vpnImpl.onDestroy()
         }
-        //创建新的协议
-        val vpnProvider = UniteVpnSdk.serviceMap[type]
-        vpnProvider?.create()
+        //创建新的协议并初始化
+        vpnImpl = UniteVpnSdk.getVpnImplByType(type)
+        vpnImpl.onCreate()
     }
 
     fun notifyStatusChanged(@Status status: Int) {
-
+        VPNLog.d("UniteVpnStatusService >>> notifyStatusChanged() --> status = ${status.statusToString()}")
+        if (status == VpnStatus.CONNECT_FAIL && connectList.isNullOrEmpty().not()) {
+            executeConnect()
+            return
+        }
+        UniteVpnManager.notifyStatus(status)
+        showNotification(status)
     }
 
     fun notifyByteCountChanged(speedIn: Long, speedOut: Long, diffIn: Long, diffOut: Long) {
-
+        VPNLog.d("UniteVpnStatusService >>> notifyByteCountChanged() --> speedIn = $speedIn, speedOut = $speedOut, diffIn = $diffIn, diffOut = $diffOut")
+        UniteVpnManager.notifyByteCount(speedIn, speedOut, diffIn, diffOut)
+        showNotification(VpnStatus.getCurStatus(), speedIn, speedOut, diffIn, diffOut)
     }
 
 }

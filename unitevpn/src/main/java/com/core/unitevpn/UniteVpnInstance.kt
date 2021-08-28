@@ -41,7 +41,7 @@ class UniteVpnInstance(private val context: Context) {
         if (VpnStatus.isDisconnecting() || VpnStatus.isIdle()) {
             return
         }
-        UniteVpnManager.vpnHelper.notifyStatusSetChanged(VpnStatus.DISCONNECTING)
+        UniteVpnManager.notifyStatus(VpnStatus.DISCONNECTING)
         if (checkBind()) binder?.disconnect()
     }
 

@@ -21,7 +21,7 @@ class Ikev2Impl: VpnImpl {
         
     }
 
-    override fun connect() {
+    override fun connect(conn: List<Connection>) {
         
     }
 

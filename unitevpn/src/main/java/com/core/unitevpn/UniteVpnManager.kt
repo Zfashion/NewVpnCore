@@ -1,6 +1,7 @@
 package com.core.unitevpn
 
 import androidx.fragment.app.FragmentActivity
+import com.core.unitevpn.base.VpnStatus.Status
 import com.core.unitevpn.entity.ConnectionInfo
 import com.core.unitevpn.helper.UniteVpnNotifyHelper
 import com.core.unitevpn.helper.UniteVpnHelper
@@ -18,12 +19,13 @@ object UniteVpnManager {
     /**
      * Vpn接口管理类
      */
-    val vpnHelper: UniteVpnHelper by lazy { UniteVpnHelper() }
+    private val vpnHelper: UniteVpnHelper by lazy { UniteVpnHelper() }
 
     /**
      * 记录服务器相关的连接信息
      */
-    val connInfoList: MutableList<ConnectionInfo> = mutableListOf()
+    var connInfoList: MutableList<ConnectionInfo> = mutableListOf()
+        private set
 
     /**
      * 外部指定通知要跳转的目标类
@@ -34,6 +36,14 @@ object UniteVpnManager {
     internal fun resetConnInfoList() {
         if (connInfoList.isEmpty()) return
         connInfoList.clear()
+    }
+
+    internal fun notifyStatus(@Status status: Int) {
+        vpnHelper.notifyStatusSetChanged(status)
+    }
+
+    internal fun notifyByteCount(speedIn: Long, speedOut: Long, diffIn: Long, diffOut: Long) {
+        vpnHelper.notifyByteCountSetChanged(speedIn, speedOut, diffIn, diffOut)
     }
 
 }

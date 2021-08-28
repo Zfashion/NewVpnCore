@@ -8,7 +8,7 @@ interface VpnImpl {
     val type: Type
     fun onCreate()
     fun onDestroy()
-    fun connect()
+    fun connect(conn: List<Connection>)
     fun disconnect()
     fun setConnection(connections: List<Connection>)
     val isActive: Boolean

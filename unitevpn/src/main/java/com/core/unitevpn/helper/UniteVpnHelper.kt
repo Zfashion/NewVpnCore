@@ -42,5 +42,4 @@ class UniteVpnHelper {
             it.onByteCountChange(speedIn, speedOut, diffIn, diffOut)
         }
     }
-
 }

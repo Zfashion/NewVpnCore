@@ -6,6 +6,7 @@ import androidx.core.app.NotificationManagerCompat
 import com.core.unitevpn.UniteVpnManager
 import com.core.unitevpn.inter.VpnProvider
 import com.core.unitevpn.base.Type
+import com.core.unitevpn.inter.VpnImpl
 import com.core.unitevpn.utils.VPNLog
 import java.util.*
 import kotlin.collections.LinkedHashMap
@@ -48,6 +49,16 @@ object UniteVpnSdk {
             NotificationManagerCompat.from(context).createNotificationChannel(impl)
 //            context.getSystemService(NotificationManager::class.java).createNotificationChannel(impl)
         }
+    }
+
+    private fun getProviderByType(type: Type): VpnProvider<*> {
+        return serviceMap[type]
+            ?: throw NoSuchElementException("ServiceLoader doesn't load $type provider")
+    }
+
+    internal fun getVpnImplByType(type: Type): VpnImpl {
+        val provider = getProviderByType(type)
+        return provider.getImpl()
     }
 
 }

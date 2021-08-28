@@ -21,7 +21,7 @@ class OpenVpnImpl: VpnImpl {
         
     }
 
-    override fun connect() {
+    override fun connect(conn: List<Connection>) {
         
     }
 
