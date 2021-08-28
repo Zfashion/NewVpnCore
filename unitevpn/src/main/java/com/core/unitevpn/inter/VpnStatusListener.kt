@@ -1,6 +1,6 @@
 package com.core.unitevpn.inter
 
-import com.core.unitevpn.base.VpnStatus
+import com.core.unitevpn.base.VpnStatus.Status
 
 
 /**
@@ -8,6 +8,6 @@ import com.core.unitevpn.base.VpnStatus
  */
 interface VpnStatusListener {
 
-    fun onStatusChange(state: VpnStatus)
+    fun onStatusChange(@Status state: Int)
 
 }

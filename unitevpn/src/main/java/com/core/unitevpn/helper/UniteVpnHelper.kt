@@ -1,24 +1,16 @@
 package com.core.unitevpn.helper
 
-import com.core.unitevpn.UniteVpnManager
 import com.core.unitevpn.base.VpnStatus
+import com.core.unitevpn.base.VpnStatus.Status
 import com.core.unitevpn.common.doMainJob
-import com.core.unitevpn.common.getDefineJob
 import com.core.unitevpn.inter.ByteCountListener
 import com.core.unitevpn.inter.VpnStatusListener
-import kotlinx.coroutines.Dispatchers
 
 
 /**
- * 提供vpn当前状态和接口添加
+ * 提供vpn接口添加
  */
-class UniteVpnStatusHelper {
-
-    /**
-     * 记录当前Vpn的状态，不允许外部操作更改
-     */
-    internal var curVpnStatus: VpnStatus = VpnStatus.NOT_CONNECTED
-        private set
+class UniteVpnHelper {
 
     private val statusListeners = mutableListOf<VpnStatusListener>()
 
@@ -32,10 +24,10 @@ class UniteVpnStatusHelper {
 
     fun removeByteCountListener(listener: ByteCountListener) = kotlin.run { byteCountListeners.remove(listener) }
 
+    internal fun notifyStatusSetChanged(@Status status: Int) {
+        if (status != VpnStatus.getCurStatus()) {
+            VpnStatus.updateStatus(status)
 
-    internal fun notifyStatusSetChanged(status: VpnStatus) {
-        if (status !== UniteVpnManager.statusHelper.curVpnStatus) {
-            curVpnStatus = status
             doMainJob {
                 statusListeners.forEach {
                     it.onStatusChange(status)

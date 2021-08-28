@@ -7,14 +7,14 @@ import com.core.unitevpn.R
 import com.core.unitevpn.UniteVpnManager
 import com.core.unitevpn.inter.NotificationImpl
 import com.core.unitevpn.base.VpnStatus
-import com.core.unitevpn.helper.UniteVpnNotifyHelper
+import com.core.unitevpn.base.VpnStatus.Status
 import com.core.unitevpn.utils.NetFormatUtils
 
 class DefaultNotification: NotificationImpl {
 
     override fun impl(
         context: Context,
-        status: VpnStatus,
+        status: Int,
         speedIn: Long,
         speedOut: Long,
         diffIn: Long,
@@ -38,13 +38,14 @@ class DefaultNotification: NotificationImpl {
         return builder.build()
     }
 
-    private fun getStatusResId(status: VpnStatus): Int {
-        return when(status) {
+    private fun getStatusResId(@Status status: Int): Int {
+        return when (status) {
             VpnStatus.CONNECTED -> R.string.status_connected
             VpnStatus.NOT_CONNECTED -> R.string.status_not_connected
             VpnStatus.CONNECTING -> R.string.status_connecting
             VpnStatus.DISCONNECTING -> R.string.status_disconnecting
             VpnStatus.CONNECT_FAIL -> R.string.status_connect_fail
+            else -> status
         }
     }
 }

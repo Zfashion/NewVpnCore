@@ -11,6 +11,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.core.unitevpn.base.Type
 import com.core.unitevpn.base.VpnStatus
+import com.core.unitevpn.base.VpnStatus.Status
 import com.core.unitevpn.common.doMainJob
 import com.core.unitevpn.entity.AutoCombineInfo
 import com.core.unitevpn.inter.VpnImpl
@@ -94,7 +95,7 @@ class UniteVpnStatusService : Service() {
 
     private fun showNotification(): Notification {
         val notification =
-            UniteVpnManager.notifyHelper.defNotification.impl(this, UniteVpnManager.curVpnStatus)
+            UniteVpnManager.notifyHelper.defNotification.impl(this, VpnStatus.getCurStatus())
         notificationManager.notify(NOTIFY_ID, notification)
         return notification
     }
@@ -106,7 +107,7 @@ class UniteVpnStatusService : Service() {
             jobPrepare()
             connectList.addAll(list)
             if (connectList.isNullOrEmpty().not()) {
-                executeNextConnect()
+                executeConnect()
             }
         }
     }
@@ -123,7 +124,7 @@ class UniteVpnStatusService : Service() {
         vpnImpl.disconnect()
     }
 
-    private fun executeNextConnect() {
+    private fun executeConnect() {
         val autoInfo = connectList.poll()
         autoInfo?.let {
             checkType(it.type)
@@ -150,7 +151,7 @@ class UniteVpnStatusService : Service() {
         vpnProvider?.create()
     }
 
-    fun notifyStatusChanged(status: VpnStatus) {
+    fun notifyStatusChanged(@Status status: Int) {
 
     }
 

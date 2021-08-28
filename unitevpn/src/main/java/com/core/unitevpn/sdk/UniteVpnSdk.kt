@@ -12,13 +12,12 @@ import kotlin.collections.LinkedHashMap
 
 object UniteVpnSdk {
 
-    @Volatile
-    var isInitialized = false
+    internal var isInitialized = false
 
     internal val serviceMap: LinkedHashMap<Type, VpnProvider<*>> = LinkedHashMap()
 
 
-    fun init(context: Context) {
+    internal fun init(context: Context) {
         if (isInitialized) {
             VPNLog.d("VpnSdk Already initialized")
             return

@@ -18,7 +18,8 @@ import java.lang.ref.WeakReference;
 @AutoService(VpnProvider.class)
 public class OpenVpnProvider implements VpnProvider<OpenVpnImpl> {
 
-    private Reference<OpenVpnImpl> weakReference;
+//    private Reference<OpenVpnImpl> weakReference;
+    private OpenVpnImpl openVpn;
 
     @Override
     public void init(@NotNull Context context) {
@@ -33,17 +34,17 @@ public class OpenVpnProvider implements VpnProvider<OpenVpnImpl> {
 
     @Override
     public OpenVpnImpl create() {
-        OpenVpnImpl openVpn = new OpenVpnImpl();
-        weakReference = new WeakReference<>(openVpn);
+        openVpn = new OpenVpnImpl();
+//        weakReference = new WeakReference<>(openVpn);
         return openVpn;
     }
 
     @Override
     public OpenVpnImpl getImpl() {
-        if (weakReference == null || weakReference.get() == null) {
+        if (openVpn == null) {
             return create();
         } else {
-            return weakReference.get();
+            return openVpn;
         }
     }
 

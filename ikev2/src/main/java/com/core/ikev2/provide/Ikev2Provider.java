@@ -9,8 +9,6 @@ import com.core.unitevpn.inter.VpnProvider;
 import com.core.unitevpn.utils.VPNLog;
 import com.google.auto.service.AutoService;
 import org.jetbrains.annotations.NotNull;
-import java.lang.ref.Reference;
-import java.lang.ref.WeakReference;
 import java.security.Security;
 
 
@@ -35,7 +33,8 @@ public class Ikev2Provider implements VpnProvider<Ikev2Impl> {
         System.loadLibrary("androidbridge");
     }
 
-    private Reference<Ikev2Impl> weakReference;
+//    private Reference<Ikev2Impl> weakReference;
+    private Ikev2Impl ikev2;
 
     @Override
     public void init(@NotNull Context context) {
@@ -46,17 +45,17 @@ public class Ikev2Provider implements VpnProvider<Ikev2Impl> {
 
     @Override
     public Ikev2Impl create() {
-        Ikev2Impl ikev2 = new Ikev2Impl();
-        weakReference = new WeakReference<>(ikev2);
+        ikev2 = new Ikev2Impl();
+//        weakReference = new WeakReference<>(ikev2);
         return ikev2;
     }
 
     @Override
     public Ikev2Impl getImpl() {
-        if (weakReference == null || weakReference.get() == null) {
+        if (ikev2 == null) {
             return create();
         } else {
-            return weakReference.get();
+            return ikev2;
         }
     }
 

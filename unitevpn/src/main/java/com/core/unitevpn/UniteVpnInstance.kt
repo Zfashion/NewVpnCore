@@ -28,7 +28,7 @@ class UniteVpnInstance(private val context: Context) {
      */
     suspend fun autoConnect(list: List<AutoCombineInfo>) {
         if (checkPermission().not()) return
-        if (UniteVpnManager.curVpnStatus.isIdle) {
+        if (VpnStatus.isIdle()) {
             autoCombineList = list
             if (checkBind()) binder?.autoConnect(list)
         }
@@ -38,10 +38,10 @@ class UniteVpnInstance(private val context: Context) {
      * 断开连接
      */
     suspend fun disconnect() {
-        if (UniteVpnManager.curVpnStatus.isDisconnecting || UniteVpnManager.curVpnStatus.isIdle) {
+        if (VpnStatus.isDisconnecting() || VpnStatus.isIdle()) {
             return
         }
-        UniteVpnManager.statusHelper.notifyStatusSetChanged(VpnStatus.DISCONNECTING)
+        UniteVpnManager.vpnHelper.notifyStatusSetChanged(VpnStatus.DISCONNECTING)
         if (checkBind()) binder?.disconnect()
     }
 
