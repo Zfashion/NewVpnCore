@@ -1,21 +1,21 @@
 package com.core.unitevpn.sdk
 
-import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
+import androidx.core.app.NotificationManagerCompat
+import com.core.unitevpn.UniteVpnManager
 import com.core.unitevpn.inter.VpnProvider
 import com.core.unitevpn.base.Type
-import com.core.unitevpn.helper.VpnNotificationHelper
 import com.core.unitevpn.utils.VPNLog
 import java.util.*
 import kotlin.collections.LinkedHashMap
 
-object VpnSdk {
+object UniteVpnSdk {
 
     @Volatile
     var isInitialized = false
 
-    private val serviceMap: LinkedHashMap<Type, VpnProvider<*>> = LinkedHashMap()
+    internal val serviceMap: LinkedHashMap<Type, VpnProvider<*>> = LinkedHashMap()
 
 
     fun init(context: Context) {
@@ -42,11 +42,12 @@ object VpnSdk {
     }
 
     private fun initDefNotification(context: Context) {
-        VpnNotificationHelper.initDefault()
+        UniteVpnManager.notifyHelper.initDefault()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val defChannel = VpnNotificationHelper.defNotificationChannel
+            val defChannel = UniteVpnManager.notifyHelper.defNotificationChannel
             val impl = defChannel.impl(context)
-            context.getSystemService(NotificationManager::class.java).createNotificationChannel(impl)
+            NotificationManagerCompat.from(context).createNotificationChannel(impl)
+//            context.getSystemService(NotificationManager::class.java).createNotificationChannel(impl)
         }
     }
 

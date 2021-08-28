@@ -13,11 +13,11 @@ class OpenVpnImpl: VpnImpl {
     override val type: Type
         get() = TYPE
 
-    override fun prepare() {
+    override fun onCreate() {
         
     }
 
-    override fun unBind() {
+    override fun onDestroy() {
         
     }
 
@@ -32,4 +32,7 @@ class OpenVpnImpl: VpnImpl {
     override fun setConnection(connections: List<Connection>) {
         
     }
+
+    override val isActive: Boolean
+        get() = false
 }

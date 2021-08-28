@@ -2,11 +2,11 @@ package com.core.unitevpn
 
 import android.content.Context
 import androidx.startup.Initializer
-import com.core.unitevpn.sdk.VpnSdk
+import com.core.unitevpn.sdk.UniteVpnSdk
 
-class VpnStartUp: Initializer<Unit> {
+class UniteVpnStartUp: Initializer<Unit> {
     override fun create(context: Context) {
-        VpnSdk.init(context)
+        UniteVpnSdk.init(context)
     }
 
     override fun dependencies(): List<Class<out Initializer<*>>> = emptyList()

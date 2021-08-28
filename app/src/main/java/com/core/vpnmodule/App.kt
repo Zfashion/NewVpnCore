@@ -13,7 +13,6 @@ class App : Application() {
     init {
         VPNLog.d("App init")
 
-
     }
 
     override fun onCreate() {

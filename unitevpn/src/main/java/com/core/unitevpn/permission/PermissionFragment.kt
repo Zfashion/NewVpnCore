@@ -43,10 +43,6 @@ class PermissionFragment: Fragment() {
     }
 
     private var requestIntent: Intent? = null
-        get() = field
-        set(value) {
-            field = value
-        }
 
     private val vpnPermissionResultLauncher = registerForActivityResult(VpnPermissionResultContract()) {}
 

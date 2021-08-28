@@ -13,11 +13,11 @@ class Ikev2Impl: VpnImpl {
     override val type: Type
         get() = TYPE
 
-    override fun prepare() {
+    override fun onCreate() {
         
     }
 
-    override fun unBind() {
+    override fun onDestroy() {
         
     }
 
@@ -32,5 +32,8 @@ class Ikev2Impl: VpnImpl {
     override fun setConnection(connections: List<Connection>) {
         
     }
+
+    override val isActive: Boolean
+        get() = false
 
 }

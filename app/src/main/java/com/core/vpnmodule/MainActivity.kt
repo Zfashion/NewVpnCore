@@ -6,12 +6,23 @@ import android.os.Bundle
 import android.os.IBinder
 import android.os.RemoteException
 import android.util.Log
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.core.openvpn.core.*
 import com.core.openvpn.core.VpnStatus.StateListener
+import com.core.openvpn.provide.OpenVpnImpl
+import com.core.unitevpn.UniteVpnInstance
+import com.core.unitevpn.base.Type
+import com.core.unitevpn.common.getDefineAsync
+import com.core.unitevpn.common.getDefineJob
+import com.core.unitevpn.entity.AutoCombineInfo
+import com.core.unitevpn.entity.Connection
+import com.core.unitevpn.helper.UniteVpnStatusHelper
 import com.core.unitevpn.permission.PermissionFragment.Companion.requestPermission
 import com.core.vpnmodule.databinding.ActivityMainBinding
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.IOException
 import java.io.StringReader
@@ -135,8 +146,12 @@ class MainActivity : AppCompatActivity(), StateListener, VpnStatus.ByteCountList
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        val uniteVpnInstance = UniteVpnInstance(this)
+
         binding.startBtn.setOnClickListener {
-            lifecycleScope.launch { launchVpn() }
+            val connection1 = Connection("测试服务器", "217.138.255.222", "443", false)
+            val listOf = listOf(AutoCombineInfo(OpenVpnImpl.TYPE, listOf(connection1)))
+            lifecycleScope.launch { uniteVpnInstance.autoConnect(listOf) }
         }
         binding.disconnectBtn.setOnClickListener {
             disconnectVpn()

@@ -9,9 +9,11 @@
             android:authorities="${applicationId}.androidx-startup"
             android:exported="false"
             tools:node="merge">
-            <meta-data  android:name="com.core.unitevpn.VpnStartUp"
+            <meta-data  android:name="com.core.unitevpn.UniteVpnStartUp"
                 android:value="androidx.startup" />
         </provider>
+
+        <service android:name=".UniteVpnStatusService"/>
     </application>
 
 </manifest>
