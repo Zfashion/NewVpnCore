@@ -97,6 +97,7 @@ namespace openvpn {
 
     void start()
     {
+        OPENVPN_LOG("start()");
       if (!client && !halt)
 	{
 	  if (!test_network())
@@ -347,6 +348,7 @@ namespace openvpn {
 	      ClientEvent::Base::Ptr ev = new ClientEvent::ConnectionTimeout();
 	      client_options->events().add_event(std::move(ev));
 	      stop();
+	      if (paused) {paused = false;}
 	    }
 	}
     }
@@ -609,6 +611,7 @@ namespace openvpn {
     void new_client()
     {
       ++generation;
+      int limit = client_options->remote_list_precache()->size();
       if (client_options->asio_work_always_on())
 	asio_work.reset(new AsioWork(io_context));
       else
@@ -618,7 +621,8 @@ namespace openvpn {
 	  client->stop(false);
 	  interim_finalize();
 	}
-      if (generation > 1 && !transport_factory_relay)
+//      if (generation > 1 && !transport_factory_relay)
+        if (generation < limit && !transport_factory_relay)
 	{
 	  ClientEvent::Base::Ptr ev = new ClientEvent::Reconnecting();
 	  client_options->events().add_event(std::move(ev));
@@ -640,7 +644,7 @@ namespace openvpn {
 	}
 
       restart_wait_timer.cancel();
-      if (client_options->server_poll_timeout_enabled())
+      if (client_options->server_poll_timeout_enabled() && generation < limit)
 	{
 	  server_poll_timer.expires_after(client_options->server_poll_timeout());
 	  server_poll_timer.async_wait([self=Ptr(this), gen=generation](const openvpn_io::error_code& error)
@@ -649,6 +653,11 @@ namespace openvpn {
                                          self->server_poll_callback(gen, error);
                                        });
 	}
+      if (generation >= limit) {
+          paused = true;
+          conn_timer_start(1);
+          return;
+      }
       conn_timer_start(conn_timeout);
       client->start();
     }
