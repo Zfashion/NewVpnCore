@@ -3,6 +3,7 @@ package com.core.vpnmodule
 import android.app.Application
 import com.core.ikev2.provide.Ikev2CertHelper
 import com.core.openvpn.provide.OpenCertHelper
+import com.core.unitevpn.UniteVpnManager
 import com.core.unitevpn.utils.VPNLog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -12,7 +13,7 @@ class App : Application() {
 
     init {
         VPNLog.d("App init")
-
+        UniteVpnManager.pendingClass = MainActivity::class.java
     }
 
     override fun onCreate() {

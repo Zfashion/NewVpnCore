@@ -881,6 +881,7 @@ namespace openvpn {
 	}
     }
 
+    //OpenVpnThread_v3调用连接的函数
     OPENVPN_CLIENT_EXPORT Status OpenVPNClient::connect()
     {
 #if !defined(OPENVPN_OVPNCLI_SINGLE_THREAD)
@@ -892,9 +893,7 @@ namespace openvpn {
 #endif
       Log::Context log_context(this);
 #endif
-
       OPENVPN_LOG(ClientAPI::OpenVPNClient::platform());
-
       return do_connect();
     }
 
@@ -903,14 +902,20 @@ namespace openvpn {
       Status status;
       bool session_started = false;
       try {
-	connect_attach();
+
+      	OPENVPN_LOG("do_connect() - attach");
+      	connect_attach();
 #if defined(OPENVPN_OVPNCLI_ASYNC_SETUP)
+
+      	OPENVPN_LOG("execute - do_connect_async");
 	openvpn_io::post(*state->io_context(), [this]() {
 	    do_connect_async();
 	  });
 #else
+		  OPENVPN_LOG("ignore - do_connect_async");
 	connect_setup(status, session_started);
 #endif
+		  OPENVPN_LOG("connect run");
 	connect_run();
 	return status;
       }

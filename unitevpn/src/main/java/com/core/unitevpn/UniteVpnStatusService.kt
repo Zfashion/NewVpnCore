@@ -13,12 +13,15 @@ import com.core.unitevpn.base.Type
 import com.core.unitevpn.base.VpnStatus
 import com.core.unitevpn.base.VpnStatus.Status
 import com.core.unitevpn.common.doMainJob
+import com.core.unitevpn.common.getDefineJob
 import com.core.unitevpn.common.statusToString
+import com.core.unitevpn.common.withInvoke
 import com.core.unitevpn.entity.AutoCombineInfo
-import com.core.unitevpn.entity.Connection
+import com.core.unitevpn.entity.AutoInfo
 import com.core.unitevpn.inter.VpnImpl
 import com.core.unitevpn.sdk.UniteVpnSdk
 import com.core.unitevpn.utils.VPNLog
+import kotlinx.coroutines.Dispatchers
 import java.util.*
 
 
@@ -111,17 +114,17 @@ class UniteVpnStatusService : Service() {
 
 
     private fun autoConnect(list: List<AutoCombineInfo>) {
-        doMainJob {
+        getDefineJob(Dispatchers.Default) {
             VPNLog.d("UniteVpnStatusService >>> autoConnect() --> start auto connect")
             jobPrepare()
             connectList.addAll(list)
             if (connectList.isNullOrEmpty().not()) {
                 executeConnect()
             }
-        }
+        }.start()
     }
 
-    private fun jobPrepare() {
+    private suspend fun jobPrepare() {
         //清除上次自动连接配置的服务器集合
 //        if (connectList.isNotEmpty()) connectList.clear()
 
@@ -129,11 +132,11 @@ class UniteVpnStatusService : Service() {
         UniteVpnManager.resetConnInfoList()
     }
 
-    private fun disconnect() {
+    private fun disconnect() = getDefineJob(Dispatchers.Default) {
         vpnImpl.disconnect()
     }
 
-    private fun executeConnect() {
+    private suspend fun executeConnect() {
         val autoInfo = connectList.poll()
         autoInfo?.let {
             checkType(it.type)
@@ -141,20 +144,23 @@ class UniteVpnStatusService : Service() {
         }
     }
 
-    private fun executeRealConnect(conn: List<Connection>) {
+    private suspend fun executeRealConnect(conn: List<AutoInfo>) = withInvoke(Dispatchers.Default) {
         vpnImpl.connect(conn)
         UniteVpnManager.notifyStatus(VpnStatus.CONNECTING)
     }
 
-    private fun checkType(type: Type) {
-        if (this::vpnImpl.isInitialized) {
-            if (vpnImpl.type == type) return
+    private suspend fun checkType(type: Type) = withInvoke(Dispatchers.Default) {
+        if (this::vpnImpl.isInitialized && vpnImpl.type == type) {
+            if (vpnImpl.isActive) {
+                disconnect()
+            }
+            return@withInvoke
         }
         createVpnImpl(type)
     }
 
-    private fun createVpnImpl(type: Type) {
-        //已实例化的VPNImpl需检查状态，并销毁
+    private suspend fun createVpnImpl(type: Type) {
+        //已实例化的VPNImpl需检查Vpn状态是否需要断开，再销毁
         if (this::vpnImpl.isInitialized) {
             if (vpnImpl.isActive) {
                 disconnect()
@@ -163,13 +169,15 @@ class UniteVpnStatusService : Service() {
         }
         //创建新的协议并初始化
         vpnImpl = UniteVpnSdk.getVpnImplByType(type)
-        vpnImpl.onCreate()
+        vpnImpl.onCreate(this)
     }
 
     fun notifyStatusChanged(@Status status: Int) {
         VPNLog.d("UniteVpnStatusService >>> notifyStatusChanged() --> status = ${status.statusToString()}")
         if (status == VpnStatus.CONNECT_FAIL && connectList.isNullOrEmpty().not()) {
-            executeConnect()
+            getDefineJob(Dispatchers.Default) {
+                executeConnect()
+            }.start()
             return
         }
         UniteVpnManager.notifyStatus(status)

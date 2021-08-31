@@ -11,7 +11,7 @@ import java.io.InputStreamReader
 object OpenCertHelper {
 
     var profile: VpnProfile? = null
-    private set
+        private set
 
     @JvmStatic
     suspend fun setupCert(cert: String) = withContext(Dispatchers.IO) {
@@ -27,11 +27,11 @@ object OpenCertHelper {
         } catch (e: IOException) {
             e.printStackTrace()
             VpnProfile("Profile")
-            VPNLog.d("OpenVpn store cert fail")
+            VPNLog.d("OpenVpn parse cert due to IOException, error: ${e.message}")
         } catch (configParseError: ConfigParser.ConfigParseError) {
             configParseError.printStackTrace()
             VpnProfile("Profile")
-            VPNLog.d("OpenVpn store cert fail")
+            VPNLog.d("OpenVpn parse cert Error, error: ${configParseError.message}")
         }
     }
 

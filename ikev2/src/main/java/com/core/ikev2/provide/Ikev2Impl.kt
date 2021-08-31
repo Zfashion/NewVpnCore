@@ -1,7 +1,8 @@
 package com.core.ikev2.provide
 
+import com.core.unitevpn.UniteVpnStatusService
 import com.core.unitevpn.base.Type
-import com.core.unitevpn.entity.Connection
+import com.core.unitevpn.entity.AutoInfo
 import com.core.unitevpn.inter.VpnImpl
 
 class Ikev2Impl: VpnImpl {
@@ -13,23 +14,19 @@ class Ikev2Impl: VpnImpl {
     override val type: Type
         get() = TYPE
 
-    override fun onCreate() {
+    override suspend fun onCreate(uniteService: UniteVpnStatusService) {
         
     }
 
-    override fun onDestroy() {
+    override suspend fun onDestroy() {
         
     }
 
-    override fun connect(conn: List<Connection>) {
+    override suspend fun connect(conn: List<AutoInfo>) {
         
     }
 
-    override fun disconnect() {
-        
-    }
-
-    override fun setConnection(connections: List<Connection>) {
+    override suspend fun disconnect() {
         
     }
 

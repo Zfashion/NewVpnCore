@@ -6,8 +6,10 @@ import android.provider.Settings;
 
 import com.core.openvpn.R;
 import com.core.openvpn.VpnProfile;
+import com.core.unitevpn.utils.VPNLog;
 
 import net.openvpn.ovpn3.ClientAPI_Config;
+import net.openvpn.ovpn3.ClientAPI_ConnectionInfo;
 import net.openvpn.ovpn3.ClientAPI_EvalConfig;
 import net.openvpn.ovpn3.ClientAPI_Event;
 import net.openvpn.ovpn3.ClientAPI_ExternalPKICertRequest;
@@ -40,6 +42,7 @@ public class OpenVPNThreadv3 extends ClientAPI_OpenVPNClient implements Runnable
     @Override
     public void run() {
         String configstr = mVp.getConfigFile((Context) mService, true);
+        VPNLog.i("configstr = " + configstr);
         if (!setConfig(configstr))
             return;
         setUserPW();
@@ -182,6 +185,7 @@ public class OpenVPNThreadv3 extends ClientAPI_OpenVPNClient implements Runnable
         boolean retryOnAuthFailed = mVp.mAuthRetry == AUTH_RETRY_NOINTERACT;
         config.setRetryOnAuthFailed(retryOnAuthFailed);
 
+        VPNLog.d("eval_config before = " + config.getConnTimeout());
         ClientAPI_EvalConfig ec = eval_config(config);
         if (ec.getExternalPki()) {
             VpnStatus.logDebug("OpenVPN3 core assumes an external PKI config");
@@ -301,6 +305,7 @@ public class OpenVPNThreadv3 extends ClientAPI_OpenVPNClient implements Runnable
     public void event(ClientAPI_Event event) {
         String name = event.getName();
         String info = event.getInfo();
+        VPNLog.d("OpenVPNThreadv3 >>> event() --> event name=" + name + ", event info=" + info);
         if (name.equals("INFO")) {
             if (info.startsWith("OPEN_URL:") || info.startsWith("CR_TEXT:")
                 || info.startsWith("WEB_AUTH:")) {
@@ -377,6 +382,21 @@ public class OpenVPNThreadv3 extends ClientAPI_OpenVPNClient implements Runnable
                 long in = t.getBytesIn();
                 long out = t.getBytesOut();
                 VpnStatus.updateByteCount(in, out);
+
+                /*ClientAPI_ConnectionInfo info = connection_info();
+                VPNLog.d("OpenVPNThreadv3 >>> StatusPoller --> get connection info: " + "\n" +
+                        "ClientIp=" + info.getClientIp() + ", " + "\n" +
+                        "ServerHost=" + info.getServerHost() + ", " + "\n" +
+                        "ServerIp=" + info.getServerIp() + ", " + "\n" +
+                        "ServerPort=" + info.getServerPort() + ", " + "\n" +
+                        "ServerProto=" + info.getServerProto() + ", " + "\n" +
+                        "TunName=" + info.getTunName() + ", " + "\n" +
+                        "User=" + info.getUser() + ", " + "\n" +
+                        "Gw4=" + info.getGw4() + ", " + "\n" +
+                        "Gw6=" + info.getGw6() + ", " + "\n" +
+                        "VpnIp4=" + info.getVpnIp4() + ", " + "\n" +
+                        "VpnIp6=" + info.getVpnIp6() + ", " + "\n"
+                        );*/
             }
         }
 

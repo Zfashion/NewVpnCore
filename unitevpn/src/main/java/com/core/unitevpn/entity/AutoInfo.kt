@@ -1,7 +1,7 @@
 package com.core.unitevpn.entity
 
-data class Connection(
-    var name: String,
+data class AutoInfo(
+    var profileName: String,
     var server: String,
     var port: String,
     var useUdp: Boolean,

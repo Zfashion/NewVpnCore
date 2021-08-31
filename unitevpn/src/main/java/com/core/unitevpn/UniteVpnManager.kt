@@ -5,6 +5,8 @@ import com.core.unitevpn.base.VpnStatus.Status
 import com.core.unitevpn.entity.ConnectionInfo
 import com.core.unitevpn.helper.UniteVpnNotifyHelper
 import com.core.unitevpn.helper.UniteVpnHelper
+import com.core.unitevpn.inter.ByteCountListener
+import com.core.unitevpn.inter.VpnStatusListener
 
 /**
  * 供外部调用的VpnManager
@@ -30,7 +32,12 @@ object UniteVpnManager {
     /**
      * 外部指定通知要跳转的目标类
      */
-    var pendingClass: Class<FragmentActivity>? = null
+    var pendingClass: Class<*>? = null
+
+    fun addStatusListener(l: VpnStatusListener) = vpnHelper.addStatusListener(l)
+    fun addByteCountListener(l: ByteCountListener) = vpnHelper.addByteCountListener(l)
+    fun removeStatusListener(l: VpnStatusListener) = vpnHelper.removeStatusListener(l)
+    fun removeByteCountListener(l: ByteCountListener) = vpnHelper.removeByteCountListener(l)
 
 
     internal fun resetConnInfoList() {
@@ -45,5 +52,6 @@ object UniteVpnManager {
     internal fun notifyByteCount(speedIn: Long, speedOut: Long, diffIn: Long, diffOut: Long) {
         vpnHelper.notifyByteCountSetChanged(speedIn, speedOut, diffIn, diffOut)
     }
+
 
 }

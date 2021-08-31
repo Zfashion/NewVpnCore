@@ -25,7 +25,7 @@ class UniteVpnNotifyHelper {
         if (!this::defNotification.isInitialized) defNotification = DefaultNotification()
     }
 
-    internal fun getVpnPendingIntent(context: Context): PendingIntent? {
+    fun getVpnPendingIntent(context: Context): PendingIntent? {
         val pendingClass = UniteVpnManager.pendingClass ?: return null
         val intent = Intent(context, pendingClass)
         return PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)

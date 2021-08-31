@@ -4,5 +4,5 @@ import com.core.unitevpn.base.Type
 
 data class AutoCombineInfo(
     val type: Type.VpnType,
-    val conn: List<Connection>
+    val conn: List<AutoInfo>
 )
