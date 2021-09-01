@@ -17,7 +17,11 @@
 
 package com.core.ikev2.data;
 
+import com.core.unitevpn.utils.VPNLog;
+
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 public class VpnProfileDataSource
@@ -70,30 +74,35 @@ public class VpnProfileDataSource
 	}
 
 	private final List<VpnProfile> profileList = new ArrayList<>();
+	private Iterator<VpnProfile> profileIterator;
 
 	public void addNewProfiles(List<VpnProfile> profiles) {
 		profileList.addAll(profiles);
+		profileIterator = profiles.iterator();
 	}
 
 	/**
 	 * Delete the given VPN profile from the database.
 	 * @return true if deleted, false otherwise
 	 */
-	public void clearProfiles()
-	{
+	public void clearProfiles() {
 		profileList.clear();
+		profileIterator = null;
 	}
 
 	public VpnProfile getNextVpnProfile() {
-		if (!profileList.isEmpty() && profileList.iterator().hasNext()) {
-			return profileList.iterator().next();
+		if (profileIterator != null && profileIterator.hasNext()) {
+			return profileIterator.next();
 		} else {
 			return null;
 		}
+		/*VpnProfile poll = profileList.poll();
+		VPNLog.d("next profile= " + poll.getId());
+		return poll;*/
 	}
 
 	public boolean hasNextProfile() {
-		return !profileList.isEmpty() && profileList.iterator().hasNext();
+		return profileIterator != null && profileIterator.hasNext();
 	}
 
 	/**

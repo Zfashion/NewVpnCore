@@ -18,6 +18,7 @@
 package com.core.ikev2.logic;
 
 import android.annotation.TargetApi;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ComponentName;
 import android.content.Intent;
@@ -46,6 +47,8 @@ import com.core.ikev2.utils.IPRange;
 import com.core.ikev2.utils.IPRangeSet;
 import com.core.ikev2.utils.SettingsWriter;
 import com.core.ikev2.utils.Utils;
+import com.core.unitevpn.UniteVpnManager;
+import com.core.unitevpn.utils.VPNLog;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -551,6 +554,7 @@ public class CharonVpnService extends VpnService implements Runnable, VpnStateSe
 		{
 			if (mService != null)
 			{
+				VPNLog.d(TAG + " >>> setState() --> state= " + state.name());
 				mService.setState(state);
 			}
 		}
@@ -568,6 +572,7 @@ public class CharonVpnService extends VpnService implements Runnable, VpnStateSe
 		{
 			if (mService != null)
 			{
+				VPNLog.d(TAG + " >>> setError() --> error= " + error.name());
 				mService.setError(error);
 			}
 		}
@@ -817,7 +822,6 @@ public class CharonVpnService extends VpnService implements Runnable, VpnStateSe
 			/* even though the option displayed in the system dialog says "Configure"
 			 * we just use our main Activity */
 
-			// TODO: 2021/8/23 获取外部指定的跳转活动类，生成一个PendingIntent
 			/*Context context = getApplicationContext();
 			Intent intent = new Intent(context, MainActivity.class);
 			PendingIntent pending = PendingIntent.getActivity(context, 0, intent,
@@ -825,6 +829,11 @@ public class CharonVpnService extends VpnService implements Runnable, VpnStateSe
 			builder.setConfigureIntent(pending);*/
 
 			/* mark all VPN connections as unmetered (default changed for Android 10) */
+
+			PendingIntent pendingIntent = UniteVpnManager.INSTANCE.getNotifyHelper().getVpnPendingIntent(CharonVpnService.this);
+			if (pendingIntent != null) {
+				builder.setConfigureIntent(pendingIntent);
+			}
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
 			{
 				builder.setMetered(false);
@@ -1308,10 +1317,10 @@ public class CharonVpnService extends VpnService implements Runnable, VpnStateSe
 				builder.addRoute("::", 0);
 			}
 			/* apply selected applications */
-			if (mSelectedApps.size() > 0 &&
+			/*if (mSelectedApps.size() > 0 &&
 				Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
 			{
-				/*switch (mAppHandling)
+				switch (mAppHandling)
 				{
 					case SELECTED_APPS_EXCLUDE:
 						for (String app : mSelectedApps)
@@ -1341,10 +1350,10 @@ public class CharonVpnService extends VpnService implements Runnable, VpnStateSe
 						break;
 					default:
 						break;
-				}*/
-				// TODO: 2021/8/23 设置黑名单和白名单
+				}
+			}*/
+			// TODO: 2021/8/23 设置黑名单和白名单
 
-			}
 			builder.setMtu(mMtu);
 		}
 

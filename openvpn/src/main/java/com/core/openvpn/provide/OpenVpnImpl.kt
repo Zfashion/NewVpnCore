@@ -45,6 +45,7 @@ class OpenVpnImpl: VpnImpl, VpnStatus.StateListener, VpnStatus.ByteCountListener
         unBindOpenVpnService()
         VpnStatus.removeStateListener(this)
         VpnStatus.removeByteCountListener(this)
+        lastState = null
     }
 
     override suspend fun connect(conn: List<AutoInfo>) {
@@ -161,7 +162,10 @@ class OpenVpnImpl: VpnImpl, VpnStatus.StateListener, VpnStatus.ByteCountListener
             ConnectionStatus.LEVEL_CONNECTED -> com.core.unitevpn.base.VpnStatus.CONNECTED
             ConnectionStatus.LEVEL_NOTCONNECTED -> com.core.unitevpn.base.VpnStatus.NOT_CONNECTED
             ConnectionStatus.LEVEL_AUTH_FAILED, ConnectionStatus.UNKNOWN_LEVEL -> com.core.unitevpn.base.VpnStatus.CONNECT_FAIL
-            ConnectionStatus.LEVEL_CONNECTING_SERVER_REPLIED, ConnectionStatus.LEVEL_CONNECTING_NO_SERVER_REPLY_YET, ConnectionStatus.LEVEL_START -> com.core.unitevpn.base.VpnStatus.CONNECTING
+
+            ConnectionStatus.LEVEL_CONNECTING_SERVER_REPLIED,
+            ConnectionStatus.LEVEL_CONNECTING_NO_SERVER_REPLY_YET,
+            ConnectionStatus.LEVEL_START -> com.core.unitevpn.base.VpnStatus.CONNECTING
             else -> null
         }
     }

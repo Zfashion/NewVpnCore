@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.core.ikev2.provide.Ikev2Impl
 import com.core.openvpn.provide.OpenVpnImpl
 import com.core.unitevpn.UniteVpnInstance
 import com.core.unitevpn.UniteVpnManager
@@ -30,9 +31,15 @@ class MainActivity : AppCompatActivity(), VpnStatusListener, ByteCountListener {
 
         binding.startBtn.setOnClickListener {
             val connection1 = AutoInfo("测试服务器", "114.114.114.114", "4500", false)
-            val connection2 = AutoInfo("测试服务器", "114.114.114.114", "8080", false)
-            val connection3 = AutoInfo("测试服务器", "114.114.114.114", "800", true)
-            val listOf = listOf(AutoCombineInfo(OpenVpnImpl.TYPE, listOf(connection1, connection2, connection3)))
+            val connection2 = AutoInfo("测试服务器", "114.114.114.114", "500", false)
+            val connection3 = AutoInfo("测试服务器", "104.149.150.122", "4500", true)
+            val connection4 = AutoInfo("测试服务器", "45.82.254.26", "8080", false)
+            val connection5 = AutoInfo("测试服务器", "45.82.254.26", "800", true)
+            val connection6 = AutoInfo("测试服务器", "114.114.114.114", "800", true)
+            val listOf = listOf(
+                AutoCombineInfo(Ikev2Impl.TYPE, listOf(connection1, connection2, connection3))
+//                AutoCombineInfo(OpenVpnImpl.TYPE, listOf(connection4, connection5, connection6))
+            )
             lifecycleScope.launch { uniteVpnInstance.autoConnect(listOf) }
         }
         binding.disconnectBtn.setOnClickListener {

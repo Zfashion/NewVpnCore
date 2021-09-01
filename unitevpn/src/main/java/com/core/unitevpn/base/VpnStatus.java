@@ -35,6 +35,11 @@ public class VpnStatus {
     }
 
     @NotNull
+    public static Boolean isIdle(int status) {
+        return status == NOT_CONNECTED || status == CONNECT_FAIL;
+    }
+
+    @NotNull
     public static Boolean isConnected() {
         return mCurStatus == CONNECTED;
     }
@@ -47,6 +52,11 @@ public class VpnStatus {
     @NotNull
     public static Boolean isActive() {
         return mCurStatus == CONNECTED || mCurStatus == CONNECTING;
+    }
+
+    @NotNull
+    public static Boolean isActive(int status) {
+        return status == CONNECTED || status == CONNECTING;
     }
 
 }

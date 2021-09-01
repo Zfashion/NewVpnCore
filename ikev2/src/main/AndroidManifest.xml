@@ -3,4 +3,27 @@
     package="com.core.ikev2">
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <application>
+        <service
+            android:name=".logic.VpnStateService"
+            android:exported="false" >
+        </service>
+        <service
+            android:name=".logic.CharonVpnService"
+            android:exported="false"
+            android:permission="android.permission.BIND_VPN_SERVICE" >
+            <intent-filter>
+                <action android:name="android.net.VpnService" />
+            </intent-filter>
+        </service>
+        <provider
+            android:name=".data.LogContentProvider"
+            android:authorities="${applicationId}"
+            android:exported="true" >
+            <!-- android:grantUriPermissions="true" combined with a custom permission does
+                 not work (probably too many indirections with ACTION_SEND) so we secure
+                 this provider with a custom ticketing system -->
+        </provider>
+    </application>
 </manifest>

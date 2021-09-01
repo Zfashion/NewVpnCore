@@ -22,6 +22,9 @@ class App : Application() {
         VPNLog.d("App onCreate")
 
         CoroutineScope(Dispatchers.Default).launch {
+            Ikev2CertHelper.userName = "myvpn"
+            Ikev2CertHelper.password = "myvpnfree"
+            Ikev2CertHelper.remoteId = "auth.supervpn360.com"
             Ikev2CertHelper.storeCertificate(
                 "-----BEGIN CERTIFICATE-----\n" +
                         "MIIDMjCCAhqgAwIBAgIIKpFZgS9OCzIwDQYJKoZIhvcNAQELBQAwNzEMMAoGA1UE\n" +

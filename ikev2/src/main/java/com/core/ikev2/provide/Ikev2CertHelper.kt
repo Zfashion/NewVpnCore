@@ -18,7 +18,7 @@ object Ikev2CertHelper {
     @JvmStatic
     suspend fun storeCertificate(cert: String?) = withContext(Dispatchers.IO) {
         cert?.let {
-            CertificateUtils.storeCertificate(it)
+            Ikev2CertificateUtils.storeCertificate(it)
         }
     }
 

@@ -31,6 +31,7 @@ import com.core.ikev2.data.VpnProfile;
 import com.core.ikev2.data.VpnProfileDataSource;
 import com.core.ikev2.logic.imc.ImcState;
 import com.core.ikev2.logic.imc.RemediationInstruction;
+import com.core.unitevpn.utils.VPNLog;
 
 import java.lang.ref.WeakReference;
 import java.util.Collections;
@@ -56,7 +57,7 @@ public class VpnStateService extends Service
 	/* cap the retry interval at 2 minutes */
 	private static long MAX_RETRY_INTERVAL = 120000;
 	private static int RETRY_MSG = 1;
-	private RetryTimeoutProvider mTimeoutProvider = new RetryTimeoutProvider();
+//	private RetryTimeoutProvider mTimeoutProvider = new RetryTimeoutProvider();
 	private long mRetryTimeout;
 	private long mRetryIn;
 
@@ -271,7 +272,7 @@ public class VpnStateService extends Service
 	}
 
 	/**
-	 * 供外部调用
+	 * 外部调用连接
 	 * @param profileInfo
 	 * @param nextProfile
 	 */
@@ -399,24 +400,21 @@ public class VpnStateService extends Service
 	 *
 	 * @param change the state update to perform before notifying listeners, returns true if state changed
 	 */
-	private void notifyListeners(final Callable<Boolean> change)
-	{
+	private void notifyListeners(final Callable<Boolean> change) {
 		mHandler.post(new Runnable() {
 			@Override
-			public void run()
-			{
-				try
-				{
+			public void run() {
+				try {
+//					VPNLog.d("Ikev2 VpnStateService >>> notifyListeners() --> this state= " + getState() +", change= "+change.call() + ", error= " + mError.name());
 					if (change.call())
 					{	/* otherwise there is no need to notify the listeners */
+						VPNLog.d("Ikev2 VpnStateService >>> notifyListeners() --> update state listener");
 						for (VpnStateListener listener : mListeners)
 						{
 							listener.stateChanged();
 						}
 					}
-				}
-				catch (Exception e)
-				{
+				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
@@ -468,10 +466,11 @@ public class VpnStateService extends Service
 				{	*//* reset counter in case there is an error later on *//*
 					mTimeoutProvider.reset();
 				}*/
-				if (VpnStateService.this.mState != state)
-				{
+				if (VpnStateService.this.mState != state) {
+					VPNLog.d("Ikev2 VpnStateService >>> setState() --> this state= " + getState().name() + ", new state= " + state.name());
 					VpnStateService.this.mState = state;
 					if (state == State.CONNECTED && !isConnectFinish) {
+						VPNLog.d("Ikev2 VpnStateService >>> setState() --> connect success");
 						isConnectFinish = true;
 						afterConnectDeal(mProfile, true);
 					}
@@ -493,12 +492,21 @@ public class VpnStateService extends Service
 	{
 		notifyListeners(new Callable<Boolean>() {
 			@Override
-			public Boolean call() throws Exception
-			{
-				if (VpnStateService.this.mError != error)
-				{
-					if (VpnStateService.this.mError == ErrorState.NO_ERROR)
-					{
+			public Boolean call() throws Exception {
+
+				VPNLog.d("Ikev2 VpnStateService >>> setError() --> New error= " + error.name());
+				/*if (error == ErrorState.PASSWORD_MISSING && VpnStateService.this.mError != error) {
+					VpnStateService.this.mError = error;
+					return true;
+				}*/
+
+				if (VpnStateService.this.mError != error) {
+
+					if (VpnStateService.this.mError == ErrorState.NO_ERROR) {
+						if (error == ErrorState.PASSWORD_MISSING || error == ErrorState.AUTH_FAILED) {
+							VpnStateService.this.mError = error;
+							return true;
+						}
 						if (!isConnectFinish) {
 							afterConnectDeal(mProfile, false);
 						}
@@ -509,15 +517,14 @@ public class VpnStateService extends Service
 							isConnectFinish = true;
 							closeBlockingInError();
 						}
-					}
-					else if (error == ErrorState.NO_ERROR)
-					{
+					} else if (error == ErrorState.NO_ERROR) {
 						resetRetryTimer();
 					}
 					VpnStateService.this.mError = error;
 					return true;
+				} else {
+					return false;
 				}
-				return false;
 			}
 		});
 	}
@@ -577,12 +584,13 @@ public class VpnStateService extends Service
 	 */
 	private void setRetryTimer(ErrorState error)
 	{
-		mRetryTimeout = mRetryIn = mTimeoutProvider.getTimeout(error);
+		/*mRetryTimeout = mRetryIn = mTimeoutProvider.getTimeout(error);
 		if (mRetryTimeout <= 0)
 		{
 			return;
 		}
-		mHandler.sendMessageAtTime(mHandler.obtainMessage(RETRY_MSG), SystemClock.uptimeMillis() + RETRY_INTERVAL);
+		mHandler.sendMessageAtTime(mHandler.obtainMessage(RETRY_MSG), SystemClock.uptimeMillis() + RETRY_INTERVAL);*/
+		mHandler.sendMessage(mHandler.obtainMessage(RETRY_MSG));
 	}
 
 	/**
@@ -607,17 +615,16 @@ public class VpnStateService extends Service
 		}
 
 		@Override
-		public void handleMessage(Message msg)
-		{
+		public void handleMessage(Message msg) {
 			/* handle retry countdown */
-			if (mService.get().mRetryTimeout <= 0)
+			/*if (mService.get().mRetryTimeout <= 0)
 			{
 				return;
 			}
 			mService.get().mRetryIn -= RETRY_INTERVAL;
 			if (mService.get().mRetryIn > 0)
 			{
-				/* calculate next interval before notifying listeners */
+				*//* calculate next interval before notifying listeners *//*
 				long next = SystemClock.uptimeMillis() + RETRY_INTERVAL;
 
 				for (VpnStateListener listener : mService.get().mListeners)
@@ -629,7 +636,8 @@ public class VpnStateService extends Service
 			else
 			{
 				mService.get().connect(null, false);
-			}
+			}*/
+			mService.get().connect(null, true);
 		}
 	}
 
