@@ -85,11 +85,6 @@ class UniteVpnStatusService : Service() {
         return binder
     }
 
-    /*override fun onUnbind(intent: Intent?): Boolean {
-        if (isBind()) uniteVpnBinder = null
-        return super.onUnbind(intent)
-    }*/
-
     override fun onDestroy() {
         super.onDestroy()
         stopForeground(true)
@@ -150,6 +145,7 @@ class UniteVpnStatusService : Service() {
     }
 
     private suspend fun checkType(type: Type) = withInvoke(Dispatchers.Default) {
+        VPNLog.d("UniteVpnStatusService >>> checkType() --> type is $type")
         if (this::vpnImpl.isInitialized && vpnImpl.type == type) {
             if (vpnImpl.isActive) {
                 disconnect()
@@ -180,8 +176,13 @@ class UniteVpnStatusService : Service() {
             }.start()
             return
         }
+        /*if (lastStatus != null && lastStatus == VpnStatus.CONNECT_FAIL && status == VpnStatus.NOT_CONNECTED) {
+            lastStatus = status
+            return
+        }*/
         UniteVpnManager.notifyStatus(status)
         showNotification(status)
+        VPNLog.d("UniteVpnStatusService >>> notifyStatusChanged() --> end")
     }
 
     fun notifyByteCountChanged(speedIn: Long, speedOut: Long, diffIn: Long, diffOut: Long) {

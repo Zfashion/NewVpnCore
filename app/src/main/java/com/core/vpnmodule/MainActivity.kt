@@ -1,60 +1,98 @@
 package com.core.vpnmodule
 
 import android.os.Bundle
-import android.util.Log
+import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.lifecycleScope
 import com.core.ikev2.provide.Ikev2Impl
 import com.core.openvpn.provide.OpenVpnImpl
 import com.core.unitevpn.UniteVpnInstance
 import com.core.unitevpn.UniteVpnManager
-import com.core.unitevpn.common.statusToString
 import com.core.unitevpn.entity.AutoCombineInfo
 import com.core.unitevpn.entity.AutoInfo
-import com.core.unitevpn.inter.ByteCountListener
-import com.core.unitevpn.inter.VpnStatusListener
 import com.core.vpnmodule.databinding.ActivityMainBinding
-import kotlinx.coroutines.launch
 
-class MainActivity : AppCompatActivity(), VpnStatusListener, ByteCountListener {
+class MainActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityMainBinding
+//    private lateinit var binding: ActivityMainBinding
+    private val viewModel: MainViewModel by viewModels()
+    private val uniteVpnInstance = UniteVpnInstance(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        val binding: ActivityMainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main) //dataBinding
+        binding.lifecycleOwner = this
+        binding.viewModel = viewModel
+        /*binding = ActivityMainBinding.inflate(layoutInflater) //viewBinding
+        setContentView(binding.root)*/
 
-        val uniteVpnInstance = UniteVpnInstance(this)
-        UniteVpnManager.addStatusListener(this)
-        UniteVpnManager.addByteCountListener(this)
+        binding.startBtn.onClickStart(lifecycleScope) {
+            connectVpn()
+        }
 
-        binding.startBtn.setOnClickListener {
-            val connection1 = AutoInfo("测试服务器", "114.114.114.114", "4500", false)
-            val connection2 = AutoInfo("测试服务器", "114.114.114.114", "500", false)
-            val connection3 = AutoInfo("测试服务器", "104.149.150.122", "4500", true)
-            val connection4 = AutoInfo("测试服务器", "45.82.254.26", "8080", false)
-            val connection5 = AutoInfo("测试服务器", "45.82.254.26", "800", true)
-            val connection6 = AutoInfo("测试服务器", "114.114.114.114", "800", true)
-            val listOf = listOf(
-                AutoCombineInfo(Ikev2Impl.TYPE, listOf(connection1, connection2, connection3))
-//                AutoCombineInfo(OpenVpnImpl.TYPE, listOf(connection4, connection5, connection6))
-            )
-            lifecycleScope.launch { uniteVpnInstance.autoConnect(listOf) }
+        binding.disconnectBtn.onClickStart(lifecycleScope) {
+            disconnect()
         }
-        binding.disconnectBtn.setOnClickListener {
-            lifecycleScope.launch { uniteVpnInstance.disconnect() }
-        }
+
+        viewModel.server.value = "104.149.197.158"
+        viewModel.port.value = "8080"
     }
 
-    override fun onStatusChange(state: Int) {
-        binding.status.text = state.statusToString()
-        Log.d(this.javaClass.simpleName, "onStatusChange state = ${state.statusToString()}")
+    private suspend fun disconnect() {
+        uniteVpnInstance.disconnect()
     }
 
-    override fun onByteCountChange(speedIn: Long, speedOut: Long, diffIn: Long, diffOut: Long) {
-        Log.d(this.javaClass.simpleName, "onByteCountChange speedIn = $speedIn, speedOut = $speedOut, diffIn = $diffIn, diffOut = $diffOut")
-        Log.d(this.javaClass.simpleName, "onByteCountChange thread name = ${Thread.currentThread().name}")
+    private var clickAgain = false
+    private suspend fun connectVpn() {
+        if (viewModel.server.value.isNullOrEmpty() || viewModel.port.value.isNullOrEmpty()) {
+            Toast.makeText(this, "先填服务器信息", Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (UniteVpnManager.isActive || clickAgain) {
+            if (clickAgain.not()) Toast.makeText(this, "再点击一次就断开", Toast.LENGTH_SHORT).show()
+            clickAgain = if (clickAgain) {
+                disconnect()
+                false
+            } else {
+                true
+            }
+            return
+        }
+
+        //暂时只有Auto协议
+        val ports = viewModel.port.value
+        val portList = ports!!.split(",").map {
+            it.trim()
+            it
+        }.toMutableList()
+
+        val ikev2Connection = portList.map {
+            AutoInfo(IKEV_NAME, viewModel.server.value!!, it, false)
+        }
+        val openConnection = mutableListOf<AutoInfo>()
+        portList.forEachIndexed { index, s ->
+            if (index % 2 == 0) {
+                openConnection.add(AutoInfo(OPEN_NAME, viewModel.server.value!!, s, false)) //tcp
+            } else {
+                openConnection.add(AutoInfo(OPEN_NAME, viewModel.server.value!!, s, true))  //udp
+            }
+        }
+        if (ikev2Connection.isEmpty() && openConnection.isEmpty()) {
+            Toast.makeText(this, "port不匹配", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val listOf = listOf(
+            AutoCombineInfo(OpenVpnImpl.TYPE, openConnection),
+            AutoCombineInfo(Ikev2Impl.TYPE, ikev2Connection)
+        )
+        uniteVpnInstance.autoConnect(listOf)
+    }
+
+    companion object {
+        private const val IKEV_NAME = "ikev测试服务器"
+        private const val OPEN_NAME = "open测试服务器"
     }
 
 }

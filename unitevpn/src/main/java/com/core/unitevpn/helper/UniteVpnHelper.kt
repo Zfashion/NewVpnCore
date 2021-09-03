@@ -3,8 +3,10 @@ package com.core.unitevpn.helper
 import com.core.unitevpn.base.VpnStatus
 import com.core.unitevpn.base.VpnStatus.Status
 import com.core.unitevpn.common.doMainJob
+import com.core.unitevpn.common.statusToString
 import com.core.unitevpn.inter.ByteCountListener
 import com.core.unitevpn.inter.VpnStatusListener
+import com.core.unitevpn.utils.VPNLog
 
 
 /**
@@ -26,6 +28,7 @@ class UniteVpnHelper {
 
     internal fun notifyStatusSetChanged(@Status status: Int) {
         if (status != VpnStatus.getCurStatus()) {
+            VPNLog.d("UniteVpnHelper >>> notifyStatusSetChanged --> update status= ${status.statusToString()}")
             VpnStatus.updateStatus(status)
 
             doMainJob {

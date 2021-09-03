@@ -58,6 +58,7 @@ import com.core.openvpn.api.ExternalAppDatabase;
 import com.core.openvpn.core.VpnStatus.StateListener;
 import com.core.openvpn.core.VpnStatus.ByteCountListener;
 import com.core.openvpn.core.NetworkSpace.IpAddress;
+import com.core.unitevpn.UniteVpnFilter;
 import com.core.unitevpn.UniteVpnManager;
 
 import static com.core.openvpn.core.ConnectionStatus.LEVEL_CONNECTED;
@@ -1022,7 +1023,7 @@ public class OpenVPNService extends VpnService implements StateListener, Callbac
             VpnStatus.logDebug("VPN Profile uses at least one server entry with Orbot. Setting up VPN so that OrBot is not redirected over VPN.");
 
 
-        boolean atLeastOneAllowedApp = false;
+        /*boolean atLeastOneAllowedApp = false;
 
         if (mProfile.mAllowedAppsVpnAreDisallowed && profileUsesOrBot) {
             try {
@@ -1030,9 +1031,9 @@ public class OpenVPNService extends VpnService implements StateListener, Callbac
             } catch (PackageManager.NameNotFoundException e) {
                 VpnStatus.logDebug("Orbot not installed?");
             }
-        }
+        }*/
 
-        for (String pkg : mProfile.mAllowedAppsVpn) {
+        /*for (String pkg : mProfile.mAllowedAppsVpn) {
             try {
                 if (mProfile.mAllowedAppsVpnAreDisallowed) {
                     builder.addDisallowedApplication(pkg);
@@ -1046,16 +1047,16 @@ public class OpenVPNService extends VpnService implements StateListener, Callbac
                 mProfile.mAllowedAppsVpn.remove(pkg);
                 VpnStatus.logInfo(R.string.app_no_longer_exists, pkg);
             }
-        }
+        }*/
 
-        if (!mProfile.mAllowedAppsVpnAreDisallowed && !atLeastOneAllowedApp) {
+        /*if (!mProfile.mAllowedAppsVpnAreDisallowed && !atLeastOneAllowedApp) {
             VpnStatus.logDebug(R.string.no_allowed_app, getPackageName());
             try {
                 builder.addAllowedApplication(getPackageName());
             } catch (PackageManager.NameNotFoundException e) {
                 VpnStatus.logError("This should not happen: " + e.getLocalizedMessage());
             }
-        }
+        }*/
 
         if (mProfile.mAllowedAppsVpnAreDisallowed) {
             VpnStatus.logDebug(R.string.disallowed_vpn_apps_info, TextUtils.join(", ", mProfile.mAllowedAppsVpn));
@@ -1067,6 +1068,10 @@ public class OpenVPNService extends VpnService implements StateListener, Callbac
             builder.allowBypass();
             VpnStatus.logDebug("Apps may bypass VPN");
         }
+
+        //添加黑名单或白名单
+        UniteVpnFilter uniteVpnFilter = new UniteVpnFilter();
+        uniteVpnFilter.apply(OpenVPNService.this, builder);
     }
 
     public void addDNS(String dns) {

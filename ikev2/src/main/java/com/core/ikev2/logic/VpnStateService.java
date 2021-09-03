@@ -300,7 +300,7 @@ public class VpnStateService extends Service
 		if (startTime == null) {
 			startTime = 0L;
 		}
-		// TODO: 2021/8/23 生成连接状态信息
+		// TODO: 2021/8/23 Generate connection status information
 
 	}
 

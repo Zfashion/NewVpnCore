@@ -42,7 +42,7 @@ public class OpenVPNThreadv3 extends ClientAPI_OpenVPNClient implements Runnable
     @Override
     public void run() {
         String configstr = mVp.getConfigFile((Context) mService, true);
-        VPNLog.i("configstr = " + configstr);
+//        VPNLog.i("configstr = " + configstr);
         if (!setConfig(configstr))
             return;
         setUserPW();
@@ -305,7 +305,7 @@ public class OpenVPNThreadv3 extends ClientAPI_OpenVPNClient implements Runnable
     public void event(ClientAPI_Event event) {
         String name = event.getName();
         String info = event.getInfo();
-        VPNLog.d("OpenVPNThreadv3 >>> event() --> event name=" + name + ", event info=" + info);
+//        VPNLog.d("OpenVPNThreadv3 >>> event() --> event name=" + name + ", event info=" + info);
         if (name.equals("INFO")) {
             if (info.startsWith("OPEN_URL:") || info.startsWith("CR_TEXT:")
                 || info.startsWith("WEB_AUTH:")) {

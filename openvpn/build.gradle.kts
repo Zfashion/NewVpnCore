@@ -5,7 +5,7 @@ plugins {
     kotlin("android")
 }
 
-val usePreBuildLibs: Boolean = false
+val usePreBuildLibs: Boolean = true
 
 android {
     compileSdkVersion(30)

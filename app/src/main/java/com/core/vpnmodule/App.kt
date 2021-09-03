@@ -51,17 +51,6 @@ class App : Application() {
             OpenCertHelper.setupCert(
                 """
                     client
-                    <connection>
-                    remote 104.149.193.146 443 tcp
-                    connect-timeout  20
-                    connect-retry 0
-                    </connection>
-                    
-                    <connection>
-                    remote 104.149.198.102 102 tcp
-                    connect-timeout  20
-                    connect-retry 0
-                    </connection>
                     
                     connect-retry 1
                     connect-retry-max 1

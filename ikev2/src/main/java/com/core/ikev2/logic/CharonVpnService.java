@@ -47,6 +47,7 @@ import com.core.ikev2.utils.IPRange;
 import com.core.ikev2.utils.IPRangeSet;
 import com.core.ikev2.utils.SettingsWriter;
 import com.core.ikev2.utils.Utils;
+import com.core.unitevpn.UniteVpnFilter;
 import com.core.unitevpn.UniteVpnManager;
 import com.core.unitevpn.utils.VPNLog;
 
@@ -830,6 +831,7 @@ public class CharonVpnService extends VpnService implements Runnable, VpnStateSe
 
 			/* mark all VPN connections as unmetered (default changed for Android 10) */
 
+			//设置PendingIntent
 			PendingIntent pendingIntent = UniteVpnManager.INSTANCE.getNotifyHelper().getVpnPendingIntent(CharonVpnService.this);
 			if (pendingIntent != null) {
 				builder.setConfigureIntent(pendingIntent);
@@ -1352,8 +1354,10 @@ public class CharonVpnService extends VpnService implements Runnable, VpnStateSe
 						break;
 				}
 			}*/
-			// TODO: 2021/8/23 设置黑名单和白名单
 
+			//添加黑名单或白名单
+			UniteVpnFilter uniteVpnFilter = new UniteVpnFilter();
+			uniteVpnFilter.apply(CharonVpnService.this, builder);
 			builder.setMtu(mMtu);
 		}
 

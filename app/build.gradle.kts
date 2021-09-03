@@ -33,6 +33,7 @@ android {
     }
     buildFeatures {
         viewBinding = true
+        dataBinding = true
     }
 }
 
@@ -54,6 +55,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlinVersion")
     implementation ("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version")
+    implementation("androidx.activity:activity-ktx:1.3.1")
+//    implementation("androidx.core:core-ktx:1.6.0")
 
     implementation(project(mapOf("path" to ":ikev2")))
     implementation(project(mapOf("path" to ":openvpn")))

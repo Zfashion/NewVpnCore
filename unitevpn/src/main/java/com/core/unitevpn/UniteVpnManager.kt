@@ -1,8 +1,9 @@
 package com.core.unitevpn
 
-import androidx.fragment.app.FragmentActivity
+import com.core.unitevpn.base.VpnStatus
 import com.core.unitevpn.base.VpnStatus.Status
 import com.core.unitevpn.entity.ConnectionInfo
+import com.core.unitevpn.helper.UniteVpnFilterHelper
 import com.core.unitevpn.helper.UniteVpnNotifyHelper
 import com.core.unitevpn.helper.UniteVpnHelper
 import com.core.unitevpn.inter.ByteCountListener
@@ -24,6 +25,11 @@ object UniteVpnManager {
     private val vpnHelper: UniteVpnHelper by lazy { UniteVpnHelper() }
 
     /**
+     * vpn过滤类
+     */
+    val filterHelper: UniteVpnFilterHelper by lazy { UniteVpnFilterHelper() }
+
+    /**
      * 记录服务器相关的连接信息
      */
     var connInfoList: MutableList<ConnectionInfo> = mutableListOf()
@@ -33,6 +39,19 @@ object UniteVpnManager {
      * 外部指定通知要跳转的目标类
      */
     var pendingClass: Class<*>? = null
+
+    /**
+     * 供外部使用，返回vpn状态是否处于活动状态
+     */
+    val isActive: Boolean
+        get() = VpnStatus.isActive()
+
+    /**
+     * 供外部使用，返回当前Vpn的状态
+     */
+    val vpnStatus : Int
+        get() = VpnStatus.getCurStatus()
+
 
     fun addStatusListener(l: VpnStatusListener) = vpnHelper.addStatusListener(l)
     fun addByteCountListener(l: ByteCountListener) = vpnHelper.addByteCountListener(l)

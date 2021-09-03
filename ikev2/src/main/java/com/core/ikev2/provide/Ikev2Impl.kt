@@ -13,15 +13,11 @@ import com.core.ikev2.logic.VpnStateService
 import com.core.unitevpn.UniteVpnStatusService
 import com.core.unitevpn.base.Type
 import com.core.unitevpn.base.VpnStatus
-import com.core.unitevpn.common.UniteScope
-import com.core.unitevpn.common.getDefineJob
-import com.core.unitevpn.common.statusToString
-import com.core.unitevpn.common.withInvoke
+import com.core.unitevpn.common.*
 import com.core.unitevpn.entity.AutoInfo
 import com.core.unitevpn.inter.VpnImpl
 import com.core.unitevpn.utils.VPNLog
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlin.coroutines.resume
@@ -34,11 +30,12 @@ class Ikev2Impl: VpnImpl, VpnStateService.VpnStateListener, NetTraffics.ByteCoun
 
     private var uniteService: UniteVpnStatusService? = null
 
+    @Volatile
     private var ikev2Binder: VpnStateService? = null
 
     private var lastState : Int? = null
 
-    private var serviceConnection: Ikev2ServiceConnection? = null
+    private val serviceConnection: Ikev2ServiceConnection by lazy { Ikev2ServiceConnection() }
 
     private val netTraffics = NetTraffics()
 
@@ -58,6 +55,7 @@ class Ikev2Impl: VpnImpl, VpnStateService.VpnStateListener, NetTraffics.ByteCoun
     }
 
     override suspend fun onDestroy() {
+        VPNLog.d("Ikev2Impl >>> onDestroy() --> execute destroy")
         unBindIkev2Service()
         ikev2Binder?.unregisterListener(this)
         netTraffics.removeByteByteCountListener(this)
@@ -65,6 +63,8 @@ class Ikev2Impl: VpnImpl, VpnStateService.VpnStateListener, NetTraffics.ByteCoun
         lastState = null
         if (afterConnectJob?.isCompleted == false) afterConnectJob?.cancel()
         if (afterDisconnectJob?.isCompleted == false) afterDisconnectJob?.cancel()
+        afterConnectJob = null
+        afterDisconnectJob = null
     }
 
     override suspend fun connect(conn: List<AutoInfo>) {
@@ -79,6 +79,7 @@ class Ikev2Impl: VpnImpl, VpnStateService.VpnStateListener, NetTraffics.ByteCoun
     }
 
     override suspend fun disconnect() {
+        VPNLog.d("Ikev2Impl >>> disconnect() --> execute disconnect")
         if (afterConnectJob?.isCompleted == false) afterConnectJob?.cancel()
         if (ikev2Binder == null) {
             bindIkev2Service()
@@ -111,7 +112,13 @@ class Ikev2Impl: VpnImpl, VpnStateService.VpnStateListener, NetTraffics.ByteCoun
                 netTraffics.start()
             } else if (status == VpnStatus.DISCONNECTING) {
                 netTraffics.stop()
+            } else if (status == VpnStatus.CONNECT_FAIL) {
+                getDefineJob(Dispatchers.Default) {
+                    delay(10)
+                    uniteService?.notifyStatusChanged(VpnStatus.NOT_CONNECTED)
+                }.start()
             }
+            VPNLog.d("Ikev2Impl >>> stateChanged() --> notify status")
             uniteService?.notifyStatusChanged(status)
         }
     }
@@ -125,9 +132,7 @@ class Ikev2Impl: VpnImpl, VpnStateService.VpnStateListener, NetTraffics.ByteCoun
             uniteService?.let {
                 VPNLog.d("Ikev2Impl >>> bindIkev2Service() --> start to bind")
                 val intent = Intent(it, VpnStateService::class.java)
-                val ikev2ServiceConnection = Ikev2ServiceConnection()
-                serviceConnection = ikev2ServiceConnection
-                it.bindService(intent, ikev2ServiceConnection, BIND_AUTO_CREATE)
+                it.bindService(intent, serviceConnection, BIND_AUTO_CREATE)
             }
         }
     }
@@ -137,9 +142,8 @@ class Ikev2Impl: VpnImpl, VpnStateService.VpnStateListener, NetTraffics.ByteCoun
      */
     private suspend fun unBindIkev2Service() = mutex.withLock {
         if (ikev2Binder != null) {
-            if (serviceConnection != null) uniteService?.unbindService(serviceConnection!!)
+            uniteService?.unbindService(serviceConnection)
             uniteService = null
-            serviceConnection = null
         }
     }
 
