@@ -8,14 +8,12 @@ plugins {
 val usePreBuildLibs: Boolean = true
 
 android {
-    compileSdkVersion(30)
+    compileSdk = 30
     buildToolsVersion = "30.0.3"
 
     defaultConfig {
-        minSdkVersion(19)
-        targetSdkVersion(30)
-        versionCode(1)
-        versionName = "1.0"
+        minSdk = 19
+        targetSdk = 30
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
@@ -40,10 +38,10 @@ android {
     sourceSets {
         getByName("main") {
             res {
-                srcDirs("src/main/res", "src/ui/src")
+                srcDirs("src/main/res")
             }
             java {
-                srcDirs("src/main/java", "src/ui/java")
+                srcDirs("src/main/java")
             }
         }
     }

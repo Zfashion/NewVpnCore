@@ -1,8 +1,0 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.core.openvpn">
-
-    <application>
-        <activity android:name="com.core.openui.OpenActivity"/>
-    </application>
-
-</manifest>

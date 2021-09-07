@@ -44,6 +44,10 @@ class Ikev2Impl: VpnImpl, VpnStateService.VpnStateListener, NetTraffics.ByteCoun
     private var afterConnectJob: CancellableContinuation<Unit>? = null
     private var afterDisconnectJob: CancellableContinuation<Unit>? = null
 
+    private fun isBind(): Boolean {
+        return ikev2Binder != null
+    }
+
     override val type: Type
         get() = TYPE
 
@@ -56,42 +60,42 @@ class Ikev2Impl: VpnImpl, VpnStateService.VpnStateListener, NetTraffics.ByteCoun
 
     override suspend fun onDestroy() {
         VPNLog.d("Ikev2Impl >>> onDestroy() --> execute destroy")
-        unBindIkev2Service()
-        ikev2Binder?.unregisterListener(this)
-        netTraffics.removeByteByteCountListener(this)
-        ikev2Binder = null
-        lastState = null
         if (afterConnectJob?.isCompleted == false) afterConnectJob?.cancel()
         if (afterDisconnectJob?.isCompleted == false) afterDisconnectJob?.cancel()
         afterConnectJob = null
         afterDisconnectJob = null
+        ikev2Binder?.unregisterListener(this)
+        netTraffics.removeByteByteCountListener(this)
+        unBindIkev2Service()
+        uniteService = null
+        lastState = null
     }
 
     override suspend fun connect(conn: List<AutoInfo>) {
-        if (ikev2Binder == null) {
+        if (isBind()) {
+            VPNLog.d("Ikev2Impl >>> connect() --> ikev2Binder != null, connectImpl")
+            connectImpl(conn)
+        } else {
             VPNLog.d("Ikev2Impl >>> connect() --> ikev2Binder == null, need to bind ikev2Service")
             bindIkev2Service()
             afterConnectByBind(conn)
-        } else {
-            VPNLog.d("Ikev2Impl >>> connect() --> ikev2Binder != null, connectImpl")
-            connectImpl(conn)
         }
     }
 
     override suspend fun disconnect() {
         VPNLog.d("Ikev2Impl >>> disconnect() --> execute disconnect")
         if (afterConnectJob?.isCompleted == false) afterConnectJob?.cancel()
-        if (ikev2Binder == null) {
+        if (isBind()) {
+            ikev2Binder?.disconnect()
+        } else {
             bindIkev2Service()
             afterDisconnectByBind()
-        } else {
-            ikev2Binder?.disconnect()
         }
     }
 
     override val isActive: Boolean
         get() {
-            return if (ikev2Binder != null) {
+            return if (isBind()) {
                 VpnStatus.isActive(getVpnStatusFromService(ikev2Binder!!))
             } else {
                 false
@@ -100,7 +104,7 @@ class Ikev2Impl: VpnImpl, VpnStateService.VpnStateListener, NetTraffics.ByteCoun
 
 
     override fun stateChanged() {
-        val status = if (ikev2Binder != null) {
+        val status = if (isBind()) {
             getVpnStatusFromService(ikev2Binder!!)
         } else {
             VpnStatus.NOT_CONNECTED
@@ -128,12 +132,11 @@ class Ikev2Impl: VpnImpl, VpnStateService.VpnStateListener, NetTraffics.ByteCoun
      * 绑定ikev2的服务
      */
     private suspend fun bindIkev2Service() = mutex.withLock {
-        if (ikev2Binder == null) {
-            uniteService?.let {
-                VPNLog.d("Ikev2Impl >>> bindIkev2Service() --> start to bind")
-                val intent = Intent(it, VpnStateService::class.java)
-                it.bindService(intent, serviceConnection, BIND_AUTO_CREATE)
-            }
+        if (isBind()) return@withLock
+        uniteService?.let {
+            VPNLog.d("Ikev2Impl >>> bindIkev2Service() --> start to bind")
+            val intent = Intent(it, VpnStateService::class.java)
+            it.bindService(intent, serviceConnection, BIND_AUTO_CREATE)
         }
     }
 
@@ -141,9 +144,9 @@ class Ikev2Impl: VpnImpl, VpnStateService.VpnStateListener, NetTraffics.ByteCoun
      * 解绑ikev2服务
      */
     private suspend fun unBindIkev2Service() = mutex.withLock {
-        if (ikev2Binder != null) {
+        if (isBind()) {
             uniteService?.unbindService(serviceConnection)
-            uniteService = null
+            ikev2Binder = null
         }
     }
 
@@ -182,7 +185,7 @@ class Ikev2Impl: VpnImpl, VpnStateService.VpnStateListener, NetTraffics.ByteCoun
     private suspend fun afterConnectByBind(conn: List<AutoInfo>) = suspendCancellableCoroutine<Unit> {
         while (it.isActive) {
             VPNLog.d("Ikev2Impl >>> afterConnectByBind() --> await bind service than to connect")
-            if (ikev2Binder != null) {
+            if (isBind()) {
                 VPNLog.d("Ikev2Impl >>> afterConnectByBind() --> ikev2Binder not null, can to connect")
                 connectImpl(conn)
                 it.resume(Unit)
@@ -195,7 +198,7 @@ class Ikev2Impl: VpnImpl, VpnStateService.VpnStateListener, NetTraffics.ByteCoun
     private suspend fun afterDisconnectByBind() = suspendCancellableCoroutine<Unit> {
         while (it.isActive) {
             VPNLog.d("Ikev2Impl >>> afterDisconnectByBind() --> await bind service than to disconnect")
-            if (ikev2Binder != null) {
+            if (isBind()) {
                 VPNLog.d("Ikev2Impl >>> afterDisconnectByBind() --> ikev2Binder not null, can to disconnect")
                 getDefineJob(it.context) { disconnect() }
                 it.resume(Unit)

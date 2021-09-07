@@ -63,6 +63,7 @@ class UniteVpnStatusService : Service() {
     @Volatile
     private lateinit var vpnImpl: VpnImpl
 
+
     override fun onCreate() {
         super.onCreate()
         notificationManager = NotificationManagerCompat.from(this)
@@ -119,6 +120,11 @@ class UniteVpnStatusService : Service() {
         }.start()
     }
 
+    private fun disconnect() = getDefineJob(Dispatchers.Default) {
+        vpnImpl.disconnect()
+    }
+
+
     private suspend fun jobPrepare() {
         //清除上次自动连接配置的服务器集合
 //        if (connectList.isNotEmpty()) connectList.clear()
@@ -127,46 +133,56 @@ class UniteVpnStatusService : Service() {
         UniteVpnManager.resetConnInfoList()
     }
 
-    private fun disconnect() = getDefineJob(Dispatchers.Default) {
-        vpnImpl.disconnect()
-    }
-
     private suspend fun executeConnect() {
         val autoInfo = connectList.poll()
         autoInfo?.let {
-            checkType(it.type)
+            val checkJob = checkType(it.type)
+            checkJob.join()
+            VPNLog.d("UniteVpnStatusService >>> executeConnect() --> finally vpnImpl type is ${vpnImpl.type}")
             executeRealConnect(it.conn)
         }
     }
 
     private suspend fun executeRealConnect(conn: List<AutoInfo>) = withInvoke(Dispatchers.Default) {
-        vpnImpl.connect(conn)
         UniteVpnManager.notifyStatus(VpnStatus.CONNECTING)
+        vpnImpl.connect(conn)
     }
 
-    private suspend fun checkType(type: Type) = withInvoke(Dispatchers.Default) {
+
+
+    private suspend fun checkType(type: Type) = getDefineJob(Dispatchers.Default) {
         VPNLog.d("UniteVpnStatusService >>> checkType() --> type is $type")
         if (this::vpnImpl.isInitialized && vpnImpl.type == type) {
+            VPNLog.d("UniteVpnStatusService >>> checkType() --> ${vpnImpl.type} isInitialized")
             if (vpnImpl.isActive) {
+                VPNLog.d("UniteVpnStatusService >>> checkType() --> ${vpnImpl.type} isActive")
                 disconnect()
             }
-            return@withInvoke
+        } else {
+            createVpnImpl(type)
         }
-        createVpnImpl(type)
+        VPNLog.d("UniteVpnStatusService >>> checkType() --> finish")
     }
+
 
     private suspend fun createVpnImpl(type: Type) {
         //已实例化的VPNImpl需检查Vpn状态是否需要断开，再销毁
         if (this::vpnImpl.isInitialized) {
+            VPNLog.d("UniteVpnStatusService >>> createVpnImpl() --> ${vpnImpl.type} isInitialized")
             if (vpnImpl.isActive) {
+                VPNLog.d("UniteVpnStatusService >>> createVpnImpl() --> ${vpnImpl.type} isActive, need to disconnect")
                 disconnect()
             }
+            VPNLog.d("UniteVpnStatusService >>> createVpnImpl() --> ${vpnImpl.type} destroy")
             vpnImpl.onDestroy()
         }
         //创建新的协议并初始化
         vpnImpl = UniteVpnSdk.getVpnImplByType(type)
         vpnImpl.onCreate(this)
+        VPNLog.d("UniteVpnStatusService >>> createVpnImpl() --> finally create ${vpnImpl.type}")
     }
+
+
 
     fun notifyStatusChanged(@Status status: Int) {
         VPNLog.d("UniteVpnStatusService >>> notifyStatusChanged() --> status = ${status.statusToString()}")

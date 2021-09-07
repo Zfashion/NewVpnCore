@@ -17,11 +17,19 @@ import com.core.unitevpn.utils.VPNLog
  */
 class UniteVpnInstance(private val context: Context) {
 
+    companion object {
+        private const val BIND_TO_CONNECT = "BIND_TO_CONNECT"
+        private const val BIND_TO_DISCONNECT = "BIND_TO_DISCONNECT"
+    }
+
     private val serviceConnection: UniteVpnServiceConnection by lazy { UniteVpnServiceConnection() }
 
     private var binder: UniteVpnStatusService.UniteVpnBinder? = null
 
     private var autoCombineList: List<AutoCombineInfo>? = null
+
+    private var bindToConnect: Boolean = false
+    private var bindToDisConnect: Boolean = false
 
     /**
      * 执行自动连接
@@ -30,7 +38,7 @@ class UniteVpnInstance(private val context: Context) {
         if (checkPermission().not()) return
         if (VpnStatus.isIdle()) {
             autoCombineList = list
-            if (checkBind()) binder?.autoConnect(list)
+            if (checkBind(BIND_TO_CONNECT)) binder?.autoConnect(list)
         }
     }
 
@@ -42,14 +50,16 @@ class UniteVpnInstance(private val context: Context) {
             return
         }
         UniteVpnManager.notifyStatus(VpnStatus.DISCONNECTING)
-        if (checkBind()) binder?.disconnect()
+        if (checkBind(BIND_TO_DISCONNECT)) binder?.disconnect()
     }
 
 
-    private suspend fun checkBind(): Boolean {
+    private suspend fun checkBind(order: String): Boolean {
         return if (binder != null) {
             true
         } else {
+            if (order == BIND_TO_CONNECT) bindToConnect = true
+            else if (order == BIND_TO_DISCONNECT) bindToDisConnect = true
             bindService()
             false
         }
@@ -86,10 +96,17 @@ class UniteVpnInstance(private val context: Context) {
             binder = service as UniteVpnStatusService.UniteVpnBinder
             //服务绑定成功，开启前台服务
             UniteVpnStatusService.startForeground(context)
-            if (autoCombineList == null) {
-                VPNLog.d("UniteVpnInstance >>> onServiceConnected() --> autoCombineList is null, Please check if method autoConnect() parameter is empty")
-            } else {
-                binder?.autoConnect(autoCombineList!!)
+            if (bindToConnect) {
+                if (autoCombineList == null) {
+                    VPNLog.d("UniteVpnInstance >>> onServiceConnected() --> autoCombineList is null, Please check if method autoConnect() parameter is empty")
+                } else {
+                    binder?.autoConnect(autoCombineList!!)
+                }
+                bindToConnect = false
+            }
+            if (bindToDisConnect) {
+                binder?.disconnect()
+                bindToDisConnect = false
             }
         }
 

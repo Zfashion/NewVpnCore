@@ -7,6 +7,8 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
+import kotlin.jvm.Volatile;
+
 public class VpnStatus {
 
     public static final int NOT_CONNECTED = 99;
@@ -19,6 +21,7 @@ public class VpnStatus {
     @Retention(RetentionPolicy.SOURCE)
     public @interface Status{ }
 
+    @Volatile
     private static @Status int mCurStatus = NOT_CONNECTED;
 
     public static void updateStatus(@Status int newStatus) {
@@ -45,6 +48,11 @@ public class VpnStatus {
     }
 
     @NotNull
+    public static Boolean isNotConnected() {
+        return mCurStatus == NOT_CONNECTED;
+    }
+
+    @NotNull
     public static Boolean isDisconnecting() {
         return mCurStatus == DISCONNECTING;
     }
@@ -57,6 +65,11 @@ public class VpnStatus {
     @NotNull
     public static Boolean isActive(int status) {
         return status == CONNECTED || status == CONNECTING;
+    }
+
+    @NotNull
+    public static Boolean isStatusToReport() {
+        return mCurStatus == CONNECTED || mCurStatus == CONNECT_FAIL;
     }
 
 }

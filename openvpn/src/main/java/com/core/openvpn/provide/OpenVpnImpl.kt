@@ -14,6 +14,8 @@ import com.core.unitevpn.inter.VpnImpl
 import com.core.unitevpn.utils.VPNLog
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 class OpenVpnImpl: VpnImpl, VpnStatus.StateListener, VpnStatus.ByteCountListener {
 
@@ -30,11 +32,15 @@ class OpenVpnImpl: VpnImpl, VpnStatus.StateListener, VpnStatus.ByteCountListener
 
     private val profile by lazy { OpenCertHelper.profile }
 
-    private var lastState: Int? = null
+//    private var lastState: Int? = null
 
     private var afterDisconnectJob: CancellableContinuation<Unit>? = null
 
-//    private val mutex: Mutex = Mutex()
+    private fun isBind(): Boolean {
+        return openVpnBinder != null
+    }
+
+    private val mutex: Mutex = Mutex()
 
     override val type: Type
         get() = TYPE
@@ -50,12 +56,13 @@ class OpenVpnImpl: VpnImpl, VpnStatus.StateListener, VpnStatus.ByteCountListener
 
     override suspend fun onDestroy() {
         VPNLog.d("OpenVpnImpl >>> onDestroy() --> execute destroy")
-        unBindOpenVpnService()
-        VpnStatus.removeStateListener(this)
-        VpnStatus.removeByteCountListener(this)
-        lastState = null
         if (afterDisconnectJob?.isCompleted == false) afterDisconnectJob?.cancel()
         afterDisconnectJob = null
+        unBindOpenVpnService()
+        uniteService = null
+        VpnStatus.removeStateListener(this)
+        VpnStatus.removeByteCountListener(this)
+//        lastState = null
     }
 
     override suspend fun connect(conn: List<AutoInfo>) {
@@ -90,17 +97,18 @@ class OpenVpnImpl: VpnImpl, VpnStatus.StateListener, VpnStatus.ByteCountListener
 
     override suspend fun disconnect() {
         VPNLog.d("OpenVpnImpl >>> disconnect() --> execute disconnect")
-        if (openVpnBinder == null) {
+        if (isBind()) {
+            disconnectImpl()
+        } else {
             bindOpenVpnService()
             afterDisconnectByBind()
-        } else {
-            disconnectImpl()
         }
     }
 
 
     override val isActive: Boolean
-        get() = lastState == com.core.unitevpn.base.VpnStatus.CONNECTED || lastState == com.core.unitevpn.base.VpnStatus.CONNECTING
+//        get() = lastState == com.core.unitevpn.base.VpnStatus.CONNECTED || lastState == com.core.unitevpn.base.VpnStatus.CONNECTING
+        get() = com.core.unitevpn.base.VpnStatus.getCurStatus() == com.core.unitevpn.base.VpnStatus.CONNECTED || com.core.unitevpn.base.VpnStatus.getCurStatus() == com.core.unitevpn.base.VpnStatus.CONNECTING
 
 
     override fun updateState(
@@ -112,9 +120,8 @@ class OpenVpnImpl: VpnImpl, VpnStatus.StateListener, VpnStatus.ByteCountListener
     ) {
         var vpnStatus = getVpnStatusFromLevel(level)
         VPNLog.d("OpenVpnImpl >>> updateState() --> finally state string = $state,  vpnStatus = ${vpnStatus?.statusToString() ?: "null"}")
-        VPNLog.d("OpenVpnImpl >>> updateState() --> logmessage = $logmessage")
-        if (vpnStatus != null && lastState != vpnStatus) {
-            if (lastState == com.core.unitevpn.base.VpnStatus.CONNECTING && vpnStatus == com.core.unitevpn.base.VpnStatus.NOT_CONNECTED) {
+        if (vpnStatus != null && com.core.unitevpn.base.VpnStatus.getCurStatus() != vpnStatus) {
+            if (com.core.unitevpn.base.VpnStatus.getCurStatus() == com.core.unitevpn.base.VpnStatus.CONNECTING && vpnStatus == com.core.unitevpn.base.VpnStatus.NOT_CONNECTED) {
                 vpnStatus = com.core.unitevpn.base.VpnStatus.CONNECT_FAIL
             }
             notifyStatusChanged(vpnStatus)
@@ -130,7 +137,8 @@ class OpenVpnImpl: VpnImpl, VpnStatus.StateListener, VpnStatus.ByteCountListener
     /**
      * 绑定openVpn的服务
      */
-    private fun bindOpenVpnService() {
+    private suspend fun bindOpenVpnService() = mutex.withLock {
+        if (isBind()) return@withLock
         uniteService?.let {
             val intent = Intent(it, OpenVPNService::class.java)
             intent.action = OpenVPNService.START_SERVICE
@@ -142,13 +150,15 @@ class OpenVpnImpl: VpnImpl, VpnStatus.StateListener, VpnStatus.ByteCountListener
      * 解绑openVpn的服务
      */
     private fun unBindOpenVpnService() {
-        uniteService?.unbindService(serviceConnection)
-        uniteService = null
+        if (isBind()) {
+            uniteService?.unbindService(serviceConnection)
+            openVpnBinder = null
+        }
     }
 
     private suspend fun afterDisconnectByBind() = suspendCancellableCoroutine<Unit> {
         while (it.isActive) {
-            if (openVpnBinder != null) {
+            if (isBind()) {
                 disconnectImpl()
                 break
             }
@@ -157,7 +167,7 @@ class OpenVpnImpl: VpnImpl, VpnStatus.StateListener, VpnStatus.ByteCountListener
     }
 
     private fun disconnectImpl() {
-        notifyStatusChanged(com.core.unitevpn.base.VpnStatus.DISCONNECTING)
+//        notifyStatusChanged(com.core.unitevpn.base.VpnStatus.DISCONNECTING)
         try {
             openVpnBinder?.stopVPN(true)
         } catch (e: Exception) {
@@ -180,7 +190,7 @@ class OpenVpnImpl: VpnImpl, VpnStatus.StateListener, VpnStatus.ByteCountListener
     }
 
     private fun notifyStatusChanged(state: Int) {
-        lastState = state
+//        lastState = state
         VPNLog.d("OpenVpnImpl >>> notifyStatusChanged() --> notify status")
         uniteService?.notifyStatusChanged(state)
     }
