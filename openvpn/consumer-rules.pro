@@ -1,0 +1,2 @@
+-keep class net.openvpn.ovpn3.ovpncliJNI{*;}
+-keep class net.openvpn.ovpn3.ClientAPI_OpenVPNClient{*;}

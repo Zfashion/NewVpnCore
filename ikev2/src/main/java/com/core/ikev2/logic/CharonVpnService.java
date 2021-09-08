@@ -34,6 +34,8 @@ import android.security.KeyChainException;
 import android.system.OsConstants;
 import android.util.Log;
 
+import androidx.annotation.Keep;
+
 import com.core.ikev2.data.VpnProfile;
 import com.core.ikev2.data.VpnProfile.SelectedAppsHandling;
 import com.core.ikev2.data.VpnProfileDataSource;
@@ -622,6 +624,7 @@ public class CharonVpnService extends VpnService implements Runnable, VpnStateSe
 	 *
 	 * @param status new state
 	 */
+	@Keep
 	public void updateStatus(int status)
 	{
 		switch (status)
@@ -665,6 +668,7 @@ public class CharonVpnService extends VpnService implements Runnable, VpnStateSe
 	 *
 	 * @param value new state
 	 */
+	@Keep
 	public void updateImcState(int value)
 	{
 		ImcState state = ImcState.fromValue(value);
@@ -680,6 +684,7 @@ public class CharonVpnService extends VpnService implements Runnable, VpnStateSe
 	 *
 	 * @param xml XML text
 	 */
+	@Keep
 	public void addRemediationInstruction(String xml)
 	{
 		for (RemediationInstruction instruction : RemediationInstruction.fromXml(xml))
@@ -700,6 +705,7 @@ public class CharonVpnService extends VpnService implements Runnable, VpnStateSe
 	 *
 	 * @return a list of DER encoded CA certificates
 	 */
+	@Keep
 	private byte[][] getTrustedCertificates()
 	{
 		ArrayList<byte[]> certs = new ArrayList<byte[]>();
@@ -744,6 +750,7 @@ public class CharonVpnService extends VpnService implements Runnable, VpnStateSe
 	 * @throws KeyChainException
 	 * @throws CertificateEncodingException
 	 */
+	@Keep
 	private byte[][] getUserCertificate() throws KeyChainException, InterruptedException, CertificateEncodingException
 	{
 		ArrayList<byte[]> encodings = new ArrayList<byte[]>();
@@ -769,6 +776,7 @@ public class CharonVpnService extends VpnService implements Runnable, VpnStateSe
 	 * @throws InterruptedException
 	 * @throws KeyChainException
 	 */
+	@Keep
 	private PrivateKey getUserKey() throws KeyChainException, InterruptedException
 	{
 		return KeyChain.getPrivateKey(getApplicationContext(), mCurrentUserCertificateAlias);
@@ -800,6 +808,7 @@ public class CharonVpnService extends VpnService implements Runnable, VpnStateSe
 	 * Adapter for VpnService.Builder which is used to access it safely via JNI.
 	 * There is a corresponding C object to access it from native code.
 	 */
+	@Keep
 	public class BuilderAdapter
 	{
 		private VpnProfile mProfile;
@@ -1379,6 +1388,7 @@ public class CharonVpnService extends VpnService implements Runnable, VpnStateSe
 	/**
 	 * Function called via JNI to determine information about the Android version.
 	 */
+	@Keep
 	private static String getAndroidVersion()
 	{
 		String version = "Android " + Build.VERSION.RELEASE + " - " + Build.DISPLAY;
@@ -1392,6 +1402,7 @@ public class CharonVpnService extends VpnService implements Runnable, VpnStateSe
 	/**
 	 * Function called via JNI to determine information about the device.
 	 */
+	@Keep
 	private static String getDeviceString()
 	{
 		return Build.MODEL + " - " + Build.BRAND + "/" + Build.PRODUCT + "/" + Build.MANUFACTURER;
