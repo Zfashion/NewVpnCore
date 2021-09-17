@@ -32,7 +32,7 @@ class OpenVpnImpl: VpnImpl, VpnStatus.StateListener, VpnStatus.ByteCountListener
 
     private val profile by lazy { OpenCertHelper.profile }
 
-//    private var lastState: Int? = null
+    private var lastState: Int? = null
 
     private var afterDisconnectJob: CancellableContinuation<Unit>? = null
 
@@ -41,6 +41,8 @@ class OpenVpnImpl: VpnImpl, VpnStatus.StateListener, VpnStatus.ByteCountListener
     }
 
     private val mutex: Mutex = Mutex()
+
+    private var inConnectLoop = false
 
     override val type: Type
         get() = TYPE
@@ -62,7 +64,6 @@ class OpenVpnImpl: VpnImpl, VpnStatus.StateListener, VpnStatus.ByteCountListener
         uniteService = null
         VpnStatus.removeStateListener(this)
         VpnStatus.removeByteCountListener(this)
-//        lastState = null
     }
 
     override suspend fun connect(conn: List<AutoInfo>) {
@@ -97,19 +98,22 @@ class OpenVpnImpl: VpnImpl, VpnStatus.StateListener, VpnStatus.ByteCountListener
 
     override suspend fun disconnect() {
         VPNLog.d("OpenVpnImpl >>> disconnect() --> execute disconnect")
-        if (isBind()) {
-            disconnectImpl()
-        } else {
+        if (!isBind()) {
+            VPNLog.d("OpenVpnImpl >>> disconnect() --> openVpnBinder is null")
             bindOpenVpnService()
             afterDisconnectByBind()
+        } else {
+            VPNLog.d("OpenVpnImpl >>> disconnect() --> openVpnBinder no null")
+            disconnectImpl()
         }
     }
 
 
     override val isActive: Boolean
 //        get() = lastState == com.core.unitevpn.base.VpnStatus.CONNECTED || lastState == com.core.unitevpn.base.VpnStatus.CONNECTING
-        get() = com.core.unitevpn.base.VpnStatus.getCurStatus() == com.core.unitevpn.base.VpnStatus.CONNECTED || com.core.unitevpn.base.VpnStatus.getCurStatus() == com.core.unitevpn.base.VpnStatus.CONNECTING
-
+//        get() = com.core.unitevpn.base.VpnStatus.getCurStatus() == com.core.unitevpn.base.VpnStatus.CONNECTED || com.core.unitevpn.base.VpnStatus.getCurStatus() == com.core.unitevpn.base.VpnStatus.CONNECTING
+        get() = if (lastState != null) com.core.unitevpn.base.VpnStatus.isActive(lastState!!)
+                else false
 
     override fun updateState(
         state: String?,
@@ -120,10 +124,46 @@ class OpenVpnImpl: VpnImpl, VpnStatus.StateListener, VpnStatus.ByteCountListener
     ) {
         var vpnStatus = getVpnStatusFromLevel(level)
         VPNLog.d("OpenVpnImpl >>> updateState() --> finally state string = $state,  vpnStatus = ${vpnStatus?.statusToString() ?: "null"}")
-        if (vpnStatus != null && com.core.unitevpn.base.VpnStatus.getCurStatus() != vpnStatus) {
+        VPNLog.d("OpenVpnImpl >>> updateState() --> lastState = ${lastState?.statusToString()}")
+        /*if (vpnStatus != null && com.core.unitevpn.base.VpnStatus.getCurStatus() != vpnStatus) {
             if (com.core.unitevpn.base.VpnStatus.getCurStatus() == com.core.unitevpn.base.VpnStatus.CONNECTING && vpnStatus == com.core.unitevpn.base.VpnStatus.NOT_CONNECTED) {
                 vpnStatus = com.core.unitevpn.base.VpnStatus.CONNECT_FAIL
             }
+            notifyStatusChanged(vpnStatus)
+        }*/
+        if (lastState != vpnStatus && vpnStatus != null) {
+            if (inConnectLoop && lastState != null && lastState == com.core.unitevpn.base.VpnStatus.CONNECT_FAIL) {
+                if (state == "NOPROCESS" && vpnStatus == com.core.unitevpn.base.VpnStatus.NOT_CONNECTED) {
+                    VPNLog.d("OpenVpnImpl >>> updateState() --> 此次端口连接结束，开始进入下一个端口的连接")
+                    inConnectLoop = false
+                    //通知执行下一个端口连接
+                    notifyStatusChanged(lastState!!)
+                    return
+                } else {
+                    VPNLog.d("OpenVpnImpl >>> updateState() --> 此次端口连接还未结束，等待no process")
+                    return
+                }
+            }
+
+            if (lastState == com.core.unitevpn.base.VpnStatus.CONNECTING && vpnStatus == com.core.unitevpn.base.VpnStatus.CONNECT_FAIL) {
+                //失败了，判断外部端口集合是否还有下一个
+                if (uniteService?.adjustConnectListHasNext() == true) {
+                    VPNLog.d("OpenVpnImpl >>> updateState() --> 此次失败了，但是还有下个端口可以连接")
+                    lastState = vpnStatus
+                    inConnectLoop = true
+                    return
+                } else {
+                    VPNLog.d("OpenVpnImpl >>> updateState() --> 此次失败了，外部端口集合也没有了")
+                    notifyStatusChanged(vpnStatus)
+                    return
+                }
+            }
+
+            if (lastState == null) {
+                lastState = vpnStatus
+                return
+            }
+            VPNLog.d("OpenVpnImpl >>> updateState() --> 直接对外更新状态")
             notifyStatusChanged(vpnStatus)
         }
     }
@@ -190,7 +230,7 @@ class OpenVpnImpl: VpnImpl, VpnStatus.StateListener, VpnStatus.ByteCountListener
     }
 
     private fun notifyStatusChanged(state: Int) {
-//        lastState = state
+        lastState = state
         VPNLog.d("OpenVpnImpl >>> notifyStatusChanged() --> notify status")
         uniteService?.notifyStatusChanged(state)
     }

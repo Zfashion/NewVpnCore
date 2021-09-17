@@ -18,6 +18,7 @@ import com.core.openvpn.R;
 
 import java.util.LinkedList;
 import com.core.openvpn.core.OpenVPNManagement.pauseReason;
+import com.core.unitevpn.utils.VPNLog;
 
 
 public class DeviceStateReceiver extends BroadcastReceiver implements VpnStatus.ByteCountListener, OpenVPNManagement.PausedStateCallback {
@@ -223,9 +224,11 @@ public class DeviceStateReceiver extends BroadcastReceiver implements VpnStatus.
                 sameNetwork = true;
 
             /* Same network, connection still 'established' */
+            VPNLog.d("DeviceStateReceiver >>> networkStateChange() --> pendingDisconnect="+ pendingDisconnect + ", sameNetwork=" + sameNetwork);
             if (pendingDisconnect && sameNetwork) {
                 mDisconnectHandler.removeCallbacks(mDelayDisconnectRunnable);
                 // Reprotect the sockets just be sure
+                VPNLog.d("DeviceStateReceiver >>> networkStateChange() --> networkChange true");
                 mManagement.networkChange(true);
             } else {
                 /* Different network or connection not established anymore */
@@ -236,6 +239,7 @@ public class DeviceStateReceiver extends BroadcastReceiver implements VpnStatus.
                 if (shouldBeConnected()) {
                     mDisconnectHandler.removeCallbacks(mDelayDisconnectRunnable);
 
+                    VPNLog.d("DeviceStateReceiver >>> networkStateChange() --> networkChange " + sameNetwork);
                     if (pendingDisconnect || !sameNetwork)
                         mManagement.networkChange(sameNetwork);
                     else

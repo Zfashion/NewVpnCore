@@ -498,6 +498,9 @@ public class OpenVPNService extends VpnService implements StateListener, Callbac
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+//        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+//        new RuntimeException().printStackTrace(new PrintStream(byteArrayOutputStream));
+//        Log.d("OPENVPN_ON_START", byteArrayOutputStream.toString());
 
         if (intent != null && intent.getBooleanExtra(ALWAYS_SHOW_NOTIFICATION, false))
             mNotificationAlwaysVisible = true;

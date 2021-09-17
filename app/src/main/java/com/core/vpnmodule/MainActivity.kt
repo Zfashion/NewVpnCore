@@ -1,6 +1,7 @@
 package com.core.vpnmodule
 
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -13,6 +14,7 @@ import com.core.unitevpn.UniteVpnManager
 import com.core.unitevpn.entity.AutoCombineInfo
 import com.core.unitevpn.entity.AutoInfo
 import com.core.vpnmodule.databinding.ActivityMainBinding
+import com.core.vpnmodule.utils.CertificateUtils
 
 class MainActivity : AppCompatActivity() {
 
@@ -68,7 +70,7 @@ class MainActivity : AppCompatActivity() {
             it
         }.toMutableList()
 
-        val ikev2Connection = portList.map {
+        /*val ikev2Connection = portList.map {
             AutoInfo(IKEV_NAME, viewModel.server.value!!, it, false)
         }
         val openConnection = mutableListOf<AutoInfo>()
@@ -82,10 +84,13 @@ class MainActivity : AppCompatActivity() {
         if (ikev2Connection.isEmpty() && openConnection.isEmpty()) {
             Toast.makeText(this, "port不匹配", Toast.LENGTH_SHORT).show()
             return
-        }
+        }*/
+
+
         val listOf = listOf(
-            AutoCombineInfo(OpenVpnImpl.TYPE, openConnection),
-            AutoCombineInfo(Ikev2Impl.TYPE, ikev2Connection)
+            AutoCombineInfo(OpenVpnImpl.TYPE, listOf(AutoInfo(OPEN_NAME, "45.83.117.250", "443", false, 10))),
+            AutoCombineInfo(OpenVpnImpl.TYPE, listOf(AutoInfo(OPEN_NAME, "45.83.117.250", "110", true, 10))),
+            AutoCombineInfo(OpenVpnImpl.TYPE, listOf(AutoInfo(OPEN_NAME, "45.83.117.250", "119", true, 10)))
         )
         uniteVpnInstance.autoConnect(listOf)
     }

@@ -137,6 +137,7 @@ public class CharonVpnService extends VpnService implements Runnable, VpnStateSe
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId)
 	{
+		Log.i(TAG, "charon onStartCommand start");
 		if (intent != null)
 		{
 			VpnProfile profile = null;
@@ -180,6 +181,7 @@ public class CharonVpnService extends VpnService implements Runnable, VpnStateSe
 			}
 			setNextProfile(profile);
 		}
+		Log.i(TAG, "charon onStartCommand end");
 		return START_NOT_STICKY;
 	}
 
@@ -292,6 +294,7 @@ public class CharonVpnService extends VpnService implements Runnable, VpnStateSe
 						SimpleFetcher.enable();
 //						addNotification();
 						mBuilderAdapter.setProfile(mCurrentProfile);
+						Log.i(TAG, "charon start before");
 						if (initializeCharon(mBuilderAdapter, mLogFile, mAppDir, mCurrentProfile.getVpnType().has(VpnTypeFeature.BYOD),
 											(mCurrentProfile.getFlags() & VpnProfile.FLAGS_IPv6_TRANSPORT) != 0))
 						{

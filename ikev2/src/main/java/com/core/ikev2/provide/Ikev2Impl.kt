@@ -116,7 +116,7 @@ class Ikev2Impl: VpnImpl, VpnStateService.VpnStateListener, NetTraffics.ByteCoun
                 netTraffics.start()
             } else if (status == VpnStatus.DISCONNECTING) {
                 netTraffics.stop()
-            } else if (status == VpnStatus.CONNECT_FAIL) {
+            } else if (status == VpnStatus.CONNECT_FAIL && uniteService?.adjustConnectListHasNext() == false) {
                 getDefineJob(Dispatchers.Default) {
                     delay(10)
                     uniteService?.notifyStatusChanged(VpnStatus.NOT_CONNECTED)
