@@ -3332,6 +3332,7 @@ namespace openvpn {
     {
       if (!primary)
 	throw proto_error("start: no primary key");
+      OPENVPN_LOG("start protocol negotiation");
       primary->start();
       update_last_received(); // set an upper bound on when we expect a response
     }

@@ -656,6 +656,13 @@ namespace openvpn {
       return item.transport_protocol;
     }
 
+    //返回当前尝试连接的服务器端口
+    std::string current_server_port() const
+	{
+    	const Item& item = *list[primary_index()];
+		return item.server_port;
+	}
+
     template <typename T>
     T* current_conn_block_rawptr() const
     {

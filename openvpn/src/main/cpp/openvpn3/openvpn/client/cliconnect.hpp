@@ -611,7 +611,16 @@ namespace openvpn {
     void new_client()
     {
       ++generation;
-      int limit = client_options->remote_list_precache()->size();
+
+      RemoteList::Ptr remoteList = client_options->remote_list_precache();
+      int limit = remoteList->size();
+      std::string host = remoteList->current_server_host();
+      std::string protocol  = remoteList->current_transport_protocol().protocol_to_string();
+      std::string port = remoteList->current_server_port();
+      OPENVPN_LOG("current host = " << host);
+      OPENVPN_LOG("current protocol = " << protocol);
+      OPENVPN_LOG("current port = " << port);
+
       if (client_options->asio_work_always_on())
 	asio_work.reset(new AsioWork(io_context));
       else
@@ -621,8 +630,8 @@ namespace openvpn {
 	  client->stop(false);
 	  interim_finalize();
 	}
-//      if (generation > 1 && !transport_factory_relay)
-        if (generation < limit && !transport_factory_relay)
+      if (generation > 1 && !transport_factory_relay)
+//        if (generation < limit && !transport_factory_relay)
 	{
 	  ClientEvent::Base::Ptr ev = new ClientEvent::Reconnecting();
 	  client_options->events().add_event(std::move(ev));
@@ -653,7 +662,7 @@ namespace openvpn {
                                          self->server_poll_callback(gen, error);
                                        });
 	}
-      if (generation >= limit) {
+      if (generation > limit) {
           paused = true;
           conn_timer_start(1);
           return;
