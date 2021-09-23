@@ -76,7 +76,7 @@ class PermissionFragment: Fragment() {
 
     private var permissionCallback: PermissionCallback? = null
 
-    private fun setPermissionCallback(callback: PermissionCallback) = kotlin.run { permissionCallback = callback }
+    private fun setPermissionCallback(callback: PermissionCallback) { permissionCallback = callback }
 
 
 

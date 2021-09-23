@@ -18,13 +18,17 @@ class UniteVpnHelper {
 
     private val byteCountListeners = mutableListOf<ByteCountListener>()
 
-    internal fun addStatusListener(listener: VpnStatusListener) = kotlin.run { statusListeners.add(listener) }
+    internal fun addStatusListener(listener: VpnStatusListener) {
+        if (!statusListeners.contains(listener)) statusListeners.add(listener)
+    }
 
-    internal fun addByteCountListener(listener: ByteCountListener) = kotlin.run { byteCountListeners.add(listener) }
+    internal fun addByteCountListener(listener: ByteCountListener) {
+        if (!byteCountListeners.contains(listener)) byteCountListeners.add(listener)
+    }
 
-    internal fun removeStatusListener(listener: VpnStatusListener) = kotlin.run { statusListeners.remove(listener) }
+    internal fun removeStatusListener(listener: VpnStatusListener) = statusListeners.remove(listener)
 
-    internal fun removeByteCountListener(listener: ByteCountListener) = kotlin.run { byteCountListeners.remove(listener) }
+    internal fun removeByteCountListener(listener: ByteCountListener) = byteCountListeners.remove(listener)
 
     internal fun notifyStatusSetChanged(@Status status: Int) {
         if (status != VpnStatus.getCurStatus()) {

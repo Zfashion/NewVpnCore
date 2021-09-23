@@ -1,6 +1,7 @@
 package com.core.unitevpn.helper
 
 import android.content.Context
+import android.content.SharedPreferences
 
 class UniteVpnFilterHelper {
 
@@ -10,23 +11,23 @@ class UniteVpnFilterHelper {
         private val KEY_BLACK_APP_LIST = "KEY_BLACK_APP_LIST"
     }
 
-    private fun getSharePreference(context: Context) = kotlin.run {
-        context.getSharedPreferences(VPN_FILTER_SP_NAME, Context.MODE_PRIVATE)
+    private fun getSharePreference(context: Context): SharedPreferences {
+        return context.getSharedPreferences(VPN_FILTER_SP_NAME, Context.MODE_PRIVATE)
     }
 
-    fun getAllowedAppList(context: Context): Set<String> = kotlin.run {
-        getSharePreference(context).getStringSet(KEY_ALLOWED_APP_LIST, HashSet<String>())!!
+    fun getAllowedAppList(context: Context): Set<String> {
+        return getSharePreference(context).getStringSet(KEY_ALLOWED_APP_LIST, HashSet<String>())!!
     }
 
-    fun setAllowAppList(context: Context, value: Set<String>) = kotlin.run {
+    fun setAllowAppList(context: Context, value: Set<String>) {
         getSharePreference(context).edit().putStringSet(KEY_ALLOWED_APP_LIST, value).apply()
     }
 
-    fun getBlackList(context: Context): Set<String> = kotlin.run {
-        getSharePreference(context).getStringSet(KEY_BLACK_APP_LIST, HashSet<String>())!!
+    fun getBlackList(context: Context): Set<String> {
+        return getSharePreference(context).getStringSet(KEY_BLACK_APP_LIST, HashSet<String>())!!
     }
 
-    fun setBlackList(context: Context, value: Set<String>) = kotlin.run {
+    fun setBlackList(context: Context, value: Set<String>) {
         getSharePreference(context).edit().putStringSet(KEY_BLACK_APP_LIST, value).apply()
     }
 
