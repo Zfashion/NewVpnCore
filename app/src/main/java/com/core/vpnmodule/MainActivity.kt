@@ -88,9 +88,12 @@ class MainActivity : AppCompatActivity() {
 
 
         val listOf = listOf(
-            AutoCombineInfo(OpenVpnImpl.TYPE, listOf(AutoInfo(OPEN_NAME, "45.83.117.250", "443", false, 10))),
-            AutoCombineInfo(OpenVpnImpl.TYPE, listOf(AutoInfo(OPEN_NAME, "45.83.117.250", "110", true, 10))),
-            AutoCombineInfo(OpenVpnImpl.TYPE, listOf(AutoInfo(OPEN_NAME, "45.83.117.250", "119", true, 10)))
+//            AutoCombineInfo(OpenVpnImpl.TYPE, listOf(AutoInfo(OPEN_NAME, "45.83.117.250", "443", false, 10))),
+//            AutoCombineInfo(OpenVpnImpl.TYPE, listOf(AutoInfo(OPEN_NAME, "45.83.117.250", "110", true, 10))),
+//            AutoCombineInfo(OpenVpnImpl.TYPE, listOf(AutoInfo(OPEN_NAME, "45.83.117.250", "119", true, 10)))
+            AutoCombineInfo(Ikev2Impl.TYPE, listOf(AutoInfo(IKEV_NAME, "208.91.104.162", "999", true, 10))),
+            AutoCombineInfo(Ikev2Impl.TYPE, listOf(AutoInfo(IKEV_NAME, "114.114.114.114", "500", true, 10))),
+            AutoCombineInfo(Ikev2Impl.TYPE, listOf(AutoInfo(IKEV_NAME, "208.91.104.162", "500", true, 10)))
         )
         uniteVpnInstance.autoConnect(listOf)
     }

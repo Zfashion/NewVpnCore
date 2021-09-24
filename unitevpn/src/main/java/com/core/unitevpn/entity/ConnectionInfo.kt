@@ -9,4 +9,8 @@ data class ConnectionInfo(
     val isUseUdp: Boolean,
     val time: Long,
     val isSuccess: Boolean
-)
+) {
+    override fun toString(): String {
+        return "server= $server, port= $port, type= ${type.name}, isUseUdp= $isUseUdp, time= $time, isSuccess= $isSuccess"
+    }
+}

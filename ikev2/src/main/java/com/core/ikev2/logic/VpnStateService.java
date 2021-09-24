@@ -31,6 +31,9 @@ import com.core.ikev2.data.VpnProfile;
 import com.core.ikev2.data.VpnProfileDataSource;
 import com.core.ikev2.logic.imc.ImcState;
 import com.core.ikev2.logic.imc.RemediationInstruction;
+import com.core.ikev2.provide.Ikev2Impl;
+import com.core.unitevpn.UniteVpnManager;
+import com.core.unitevpn.entity.ConnectionInfo;
 import com.core.unitevpn.utils.VPNLog;
 
 import java.lang.ref.WeakReference;
@@ -300,8 +303,10 @@ public class VpnStateService extends Service
 		if (startTime == null) {
 			startTime = 0L;
 		}
-		// TODO: 2021/8/23 Generate connection status information
-
+		//Generate connection status information
+		ConnectionInfo connectionInfo = new ConnectionInfo(profile.getGateway(), profile.getPort().toString(), Ikev2Impl.Companion.getTYPE(), true, endTime - startTime, isSuccess);
+		UniteVpnManager.INSTANCE.getConnInfoList().add(connectionInfo);
+		VPNLog.d("Ikev2 VpnStateService >>> afterConnectDeal() --> connection info= {" + connectionInfo.toString() + "}");
 	}
 
 
@@ -467,7 +472,7 @@ public class VpnStateService extends Service
 					mTimeoutProvider.reset();
 				}*/
 				if (VpnStateService.this.mState != state) {
-					VPNLog.d("Ikev2 VpnStateService >>> setState() --> this state= " + getState().name() + ", new state= " + state.name());
+					VPNLog.d("Ikev2 VpnStateService >>> setState() --> this state= " + VpnStateService.this.mState.name() + ", new state= " + state.name());
 					VpnStateService.this.mState = state;
 					if (state == State.CONNECTED && !isConnectFinish) {
 						VPNLog.d("Ikev2 VpnStateService >>> setState() --> connect success");
@@ -494,7 +499,7 @@ public class VpnStateService extends Service
 			@Override
 			public Boolean call() throws Exception {
 
-				VPNLog.d("Ikev2 VpnStateService >>> setError() --> New error= " + error.name());
+				VPNLog.d("Ikev2 VpnStateService >>> setError() --> New error= " + error.name() + ", this mError= " + VpnStateService.this.mError.name());
 				/*if (error == ErrorState.PASSWORD_MISSING && VpnStateService.this.mError != error) {
 					VpnStateService.this.mError = error;
 					return true;
@@ -503,10 +508,13 @@ public class VpnStateService extends Service
 				if (VpnStateService.this.mError != error) {
 
 					if (VpnStateService.this.mError == ErrorState.NO_ERROR) {
-						if (error == ErrorState.PASSWORD_MISSING || error == ErrorState.AUTH_FAILED) {
+						//如果密码错误或者证书验证错误，直接对外更新状态
+						/*if (error == ErrorState.PASSWORD_MISSING || error == ErrorState.AUTH_FAILED) {
+							isConnectFinish = true;
+							closeBlockingInError();
 							VpnStateService.this.mError = error;
 							return true;
-						}
+						}*/
 						if (!isConnectFinish) {
 							afterConnectDeal(mProfile, false);
 						}
