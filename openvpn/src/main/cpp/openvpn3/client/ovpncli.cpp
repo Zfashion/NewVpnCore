@@ -1147,6 +1147,29 @@ namespace openvpn {
       return ci;
     }
 
+    OPENVPN_CLIENT_EXPORT ServerTimeOutInfo OpenVPNClient::timeout_info()
+    {
+    	ServerTimeOutInfo si = ServerTimeOutInfo();
+    	if (state->is_foreign_thread_access()) {
+            OPENVPN_LOG("start get remote list");
+            std::string host = state->server_override;
+            std::string port = state->port_override;
+            std::string protocol = state->proto_override.str();
+//            RemoteList::Item::Ptr ptr = state->remote_override.get();
+            OPENVPN_LOG("get prt");
+//            std::string host = ptr->server_host;
+//            std::string port = ptr->server_port;
+//            std::string protocol = ptr->transport_protocol.protocol_to_string();
+            OPENVPN_LOG("timeout host = " << host);
+            OPENVPN_LOG("timeout port = " << port);
+            OPENVPN_LOG("timeout protocol = " << protocol);
+            si.serverHost = host;
+            si.serverPort = port;
+            si.serverProto = protocol;
+    	}
+        return si;
+    }
+
     OPENVPN_CLIENT_EXPORT bool OpenVPNClient::session_token(SessionToken& tok)
     {
       if (state->is_foreign_thread_access())

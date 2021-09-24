@@ -6,10 +6,12 @@ import android.provider.Settings;
 
 import com.core.openvpn.R;
 import com.core.openvpn.VpnProfile;
+import com.core.openvpn.provide.OpenVpnImpl;
+import com.core.unitevpn.UniteVpnManager;
+import com.core.unitevpn.entity.ConnectionInfo;
 import com.core.unitevpn.utils.VPNLog;
 
 import net.openvpn.ovpn3.ClientAPI_Config;
-import net.openvpn.ovpn3.ClientAPI_ConnectionInfo;
 import net.openvpn.ovpn3.ClientAPI_EvalConfig;
 import net.openvpn.ovpn3.ClientAPI_Event;
 import net.openvpn.ovpn3.ClientAPI_ExternalPKICertRequest;
@@ -17,8 +19,10 @@ import net.openvpn.ovpn3.ClientAPI_ExternalPKISignRequest;
 import net.openvpn.ovpn3.ClientAPI_LogInfo;
 import net.openvpn.ovpn3.ClientAPI_OpenVPNClient;
 import net.openvpn.ovpn3.ClientAPI_ProvideCreds;
+import net.openvpn.ovpn3.ClientAPI_RemoteOverride;
 import net.openvpn.ovpn3.ClientAPI_Status;
 import net.openvpn.ovpn3.ClientAPI_TransportStats;
+import net.openvpn.ovpn3.ServerTimeOutInfo;
 
 import java.util.Locale;
 import static com.core.openvpn.VpnProfile.AUTH_RETRY_NOINTERACT;
@@ -33,6 +37,7 @@ public class OpenVPNThreadv3 extends ClientAPI_OpenVPNClient implements Runnable
 
     private VpnProfile mVp;
     private OpenVPNService mService;
+    private long startConnectTime;
 
     public OpenVPNThreadv3(OpenVPNService openVpnService, VpnProfile vp) {
         mVp = vp;
@@ -53,6 +58,8 @@ public class OpenVPNThreadv3 extends ClientAPI_OpenVPNClient implements Runnable
         StatusPoller statuspoller = new StatusPoller(OpenVPNManagement.mBytecountInterval * 1000);
         new Thread(statuspoller, "Status Poller").start();
 
+        startConnectTime = System.currentTimeMillis();
+        VPNLog.i("OpenVPNThreadv3 >>> 开始连接前，时间戳= " + startConnectTime);
         ClientAPI_Status status = connect();
         if (status.getError()) {
             VpnStatus.logError(String.format("connect() error: %s: %s", status.getStatus(), status.getMessage()));
@@ -305,7 +312,8 @@ public class OpenVPNThreadv3 extends ClientAPI_OpenVPNClient implements Runnable
     public void event(ClientAPI_Event event) {
         String name = event.getName();
         String info = event.getInfo();
-//        VPNLog.d("OpenVPNThreadv3 >>> event() --> event name=" + name + ", event info=" + info);
+
+        VPNLog.d("OpenVPNThreadv3 >>> event() --> event name=" + name + ", event info=" + info);
         if (name.equals("INFO")) {
             if (info.startsWith("OPEN_URL:") || info.startsWith("CR_TEXT:")
                 || info.startsWith("WEB_AUTH:")) {
@@ -316,6 +324,27 @@ public class OpenVPNThreadv3 extends ClientAPI_OpenVPNClient implements Runnable
         } else if (name.equals("COMPRESSION_ENABLED")) {
             VpnStatus.logInfo(String.format(Locale.US, "%s: %s", name, info));
         } else {
+            // TODO: 2021/9/24 获取连接的状态信息
+            if (name.equals("CONNECTION_TIMEOUT")) {
+                //返回该状态说明连接失败了
+                ServerTimeOutInfo outInfo = timeout_info();
+                String host = outInfo.getServerHost();
+                String port = outInfo.getServerPort();
+                String proto = outInfo.getServerProto();
+                VPNLog.i("OpenVPNThreadv3 >>> 连接失败，获取到的信息= { host= " + host + ", port= " + port + ", proto= " + proto + " }");
+
+            } else if (name.equals("CONNECTED")) {
+                //返回该状态说明连接成功了
+                String host = connection_info().getServerHost();
+                String port = connection_info().getServerPort();
+                boolean proto = getProtoFromInfo(connection_info().getServerProto());
+                long endTime = System.currentTimeMillis();
+                long time = endTime - startConnectTime;
+                VPNLog.i("OpenVPNThreadv3 >>> 连接成功，时间戳为= " + endTime);
+                VPNLog.i("OpenVPNThreadv3 >>> 获取到的信息为= { host= " + host + ", port= " + port + ", isUseUdp= " + proto + ", time= " + time + " }");
+                ConnectionInfo connectionInfo = new ConnectionInfo(host, port, OpenVpnImpl.Companion.getTYPE(), proto, time, true);
+                UniteVpnManager.INSTANCE.getConnInfoList().add(connectionInfo);
+            }
             VpnStatus.updateStateString(name, info);
         }
 		/* if (event.name.equals("DYNAMIC_CHALLENGE")) {
@@ -325,6 +354,12 @@ public class OpenVPNThreadv3 extends ClientAPI_OpenVPNClient implements Runnable
 		} else */
         if (event.getError())
             VpnStatus.logError(String.format("EVENT(Error): %s: %s", name, info));
+    }
+
+    private boolean getProtoFromInfo(String serverProto) {
+        if (serverProto.equals("UDPv4") || serverProto.equals("UDPv6") || serverProto.equals("UDP")) return true;
+        else if (serverProto.equals("TCPv4") || serverProto.equals("TCPv6") || serverProto.equals("TCP")) return false;
+        else return false;
     }
 
     @Override
@@ -382,21 +417,6 @@ public class OpenVPNThreadv3 extends ClientAPI_OpenVPNClient implements Runnable
                 long in = t.getBytesIn();
                 long out = t.getBytesOut();
                 VpnStatus.updateByteCount(in, out);
-
-                /*ClientAPI_ConnectionInfo info = connection_info();
-                VPNLog.d("OpenVPNThreadv3 >>> StatusPoller --> get connection info: " + "\n" +
-                        "ClientIp=" + info.getClientIp() + ", " + "\n" +
-                        "ServerHost=" + info.getServerHost() + ", " + "\n" +
-                        "ServerIp=" + info.getServerIp() + ", " + "\n" +
-                        "ServerPort=" + info.getServerPort() + ", " + "\n" +
-                        "ServerProto=" + info.getServerProto() + ", " + "\n" +
-                        "TunName=" + info.getTunName() + ", " + "\n" +
-                        "User=" + info.getUser() + ", " + "\n" +
-                        "Gw4=" + info.getGw4() + ", " + "\n" +
-                        "Gw6=" + info.getGw6() + ", " + "\n" +
-                        "VpnIp4=" + info.getVpnIp4() + ", " + "\n" +
-                        "VpnIp6=" + info.getVpnIp6() + ", " + "\n"
-                        );*/
             }
         }
 

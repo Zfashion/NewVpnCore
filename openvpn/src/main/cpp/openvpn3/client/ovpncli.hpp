@@ -357,6 +357,13 @@ namespace openvpn {
       std::string tunName;
     };
 
+    struct ServerTimeOutInfo
+    {
+        std::string serverHost;
+        std::string serverPort;
+        std::string serverProto;
+    };
+
     // returned by some methods as a status/error indication
     // (client reads)
     struct Status
@@ -513,6 +520,8 @@ namespace openvpn {
       // Return information about the most recent connection.  Should be called
       // after an event of type "CONNECTED".
       ConnectionInfo connection_info();
+
+      ServerTimeOutInfo timeout_info();
 
       // Writes current session token to tok and returns true.
       // If session token is unavailable, false is returned and

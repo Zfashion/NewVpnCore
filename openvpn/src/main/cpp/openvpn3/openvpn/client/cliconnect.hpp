@@ -617,9 +617,7 @@ namespace openvpn {
       std::string host = remoteList->current_server_host();
       std::string protocol  = remoteList->current_transport_protocol().protocol_to_string();
       std::string port = remoteList->current_server_port();
-      OPENVPN_LOG("current host = " << host);
-      OPENVPN_LOG("current protocol = " << protocol);
-      OPENVPN_LOG("current port = " << port);
+      OPENVPN_LOG("new_client >>> current host = " << host + "current protocol = " << protocol + "current port = " << port);
 
       if (client_options->asio_work_always_on())
 	asio_work.reset(new AsioWork(io_context));
