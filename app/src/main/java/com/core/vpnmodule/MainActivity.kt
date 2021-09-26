@@ -15,6 +15,7 @@ import com.core.unitevpn.entity.AutoCombineInfo
 import com.core.unitevpn.entity.AutoInfo
 import com.core.vpnmodule.databinding.ActivityMainBinding
 import com.core.vpnmodule.utils.CertificateUtils
+import java.lang.StringBuilder
 
 class MainActivity : AppCompatActivity() {
 
@@ -38,8 +39,21 @@ class MainActivity : AppCompatActivity() {
             disconnect()
         }
 
+        binding.getInfo.onClickStart(lifecycleScope) {
+            getConnectionInfo()
+        }
+
         viewModel.server.value = "104.149.197.158"
         viewModel.port.value = "8080"
+    }
+
+    private fun getConnectionInfo() {
+        val stringBuilder = StringBuilder()
+        UniteVpnManager.connInfoList.forEachIndexed { index, info ->
+            stringBuilder.append("第${index+1}个连接信息，type=${info.type.name}, server=${info.server}, port=${info.port}, isUseUdp=${info.isUseUdp}, 使用时长=${info.time/1000}s，是否连接成功=${info.isSuccess};")
+            stringBuilder.append("\n")
+        }
+        viewModel.setConnectionInfo(stringBuilder)
     }
 
     private suspend fun disconnect() {
@@ -98,6 +112,8 @@ class MainActivity : AppCompatActivity() {
         )
         uniteVpnInstance.autoConnect(listOf)
     }
+
+
 
     companion object {
         private const val IKEV_NAME = "ikev测试服务器"

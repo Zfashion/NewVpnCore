@@ -11,12 +11,15 @@ import com.core.unitevpn.inter.ByteCountListener
 import com.core.unitevpn.inter.VpnStatusListener
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import java.lang.StringBuilder
 
 class MainViewModel: ViewModel(), VpnStatusListener, ByteCountListener {
 
     val vpnStatus = MutableLiveData(VpnStatus.NOT_CONNECTED)
 
     val enable = Transformations.map(vpnStatus) { value -> if (value == null) true else VpnStatus.isIdle(value)}
+
+    val connectionInfoBuilder: MutableLiveData<StringBuilder> = MutableLiveData()
 
     val server = MutableLiveData<String>()
 
@@ -35,7 +38,10 @@ class MainViewModel: ViewModel(), VpnStatusListener, ByteCountListener {
     }
 
     override fun onByteCountChange(speedIn: Long, speedOut: Long, diffIn: Long, diffOut: Long) {
+    }
 
+    fun setConnectionInfo(stringBuilder: StringBuilder) {
+        connectionInfoBuilder.postValue(stringBuilder)
     }
 
     override fun onCleared() {
