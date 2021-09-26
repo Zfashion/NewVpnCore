@@ -1151,21 +1151,12 @@ namespace openvpn {
     {
     	ServerTimeOutInfo si = ServerTimeOutInfo();
     	if (state->is_foreign_thread_access()) {
-            OPENVPN_LOG("start get remote list");
-            std::string host = state->server_override;
-            std::string port = state->port_override;
-            std::string protocol = state->proto_override.str();
-//            RemoteList::Item::Ptr ptr = state->remote_override.get();
-            OPENVPN_LOG("get prt");
-//            std::string host = ptr->server_host;
-//            std::string port = ptr->server_port;
-//            std::string protocol = ptr->transport_protocol.protocol_to_string();
-            OPENVPN_LOG("timeout host = " << host);
-            OPENVPN_LOG("timeout port = " << port);
-            OPENVPN_LOG("timeout protocol = " << protocol);
-            si.serverHost = host;
-            si.serverPort = port;
-            si.serverProto = protocol;
+			OPENVPN_LOG("connect time out, return client some info");
+			RemoteList::Ptr list = state->session->current_remote_list_pre_cache();
+            si.serverHost = list->current_server_host();
+            si.serverPort = list->current_server_port();
+            si.serverProto = list->current_transport_protocol().str();
+            OPENVPN_LOG("timeout_info >>> {{{ pre host = " << si.serverHost + ", pre port = " << si.serverPort + ", pre protocol = " << si.serverProto + " }}}");
     	}
         return si;
     }

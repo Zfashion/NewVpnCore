@@ -12,6 +12,7 @@ import com.core.unitevpn.entity.ConnectionInfo;
 import com.core.unitevpn.utils.VPNLog;
 
 import net.openvpn.ovpn3.ClientAPI_Config;
+import net.openvpn.ovpn3.ClientAPI_ConnectionInfo;
 import net.openvpn.ovpn3.ClientAPI_EvalConfig;
 import net.openvpn.ovpn3.ClientAPI_Event;
 import net.openvpn.ovpn3.ClientAPI_ExternalPKICertRequest;
@@ -324,25 +325,29 @@ public class OpenVPNThreadv3 extends ClientAPI_OpenVPNClient implements Runnable
         } else if (name.equals("COMPRESSION_ENABLED")) {
             VpnStatus.logInfo(String.format(Locale.US, "%s: %s", name, info));
         } else {
-            // TODO: 2021/9/24 获取连接的状态信息
+            // 获取连接的状态信息
             if (name.equals("CONNECTION_TIMEOUT")) {
                 //返回该状态说明连接失败了
                 ServerTimeOutInfo outInfo = timeout_info();
                 String host = outInfo.getServerHost();
                 String port = outInfo.getServerPort();
-                String proto = outInfo.getServerProto();
-                VPNLog.i("OpenVPNThreadv3 >>> 连接失败，获取到的信息= { host= " + host + ", port= " + port + ", proto= " + proto + " }");
-
+                long endTime = System.currentTimeMillis();
+                long time = endTime - startConnectTime;
+                boolean isUseUdp = getProtoFromInfo(outInfo.getServerProto());
+                VPNLog.i("OpenVPNThreadv3 >>> 连接失败，获取到的信息= { host= " + host + ", port= " + port + ", isUseUdp= " + isUseUdp + ", time= " + time + "ms }");
+                ConnectionInfo connectionInfo = new ConnectionInfo(host, port, OpenVpnImpl.Companion.getTYPE(), isUseUdp, time, false);
+                UniteVpnManager.INSTANCE.getConnInfoList().add(connectionInfo);
             } else if (name.equals("CONNECTED")) {
                 //返回该状态说明连接成功了
-                String host = connection_info().getServerHost();
-                String port = connection_info().getServerPort();
-                boolean proto = getProtoFromInfo(connection_info().getServerProto());
+                ClientAPI_ConnectionInfo connection_info = connection_info();
+                String host = connection_info.getServerHost();
+                String port = connection_info.getServerPort();
+                boolean isUseUdp = getProtoFromInfo(connection_info.getServerProto());
                 long endTime = System.currentTimeMillis();
                 long time = endTime - startConnectTime;
                 VPNLog.i("OpenVPNThreadv3 >>> 连接成功，时间戳为= " + endTime);
-                VPNLog.i("OpenVPNThreadv3 >>> 获取到的信息为= { host= " + host + ", port= " + port + ", isUseUdp= " + proto + ", time= " + time + " }");
-                ConnectionInfo connectionInfo = new ConnectionInfo(host, port, OpenVpnImpl.Companion.getTYPE(), proto, time, true);
+                VPNLog.i("OpenVPNThreadv3 >>> 获取到的信息为= { host= " + host + ", port= " + port + ", isUseUdp= " + isUseUdp + ", time= " + time + "ms }");
+                ConnectionInfo connectionInfo = new ConnectionInfo(host, port, OpenVpnImpl.Companion.getTYPE(), isUseUdp, time, true);
                 UniteVpnManager.INSTANCE.getConnInfoList().add(connectionInfo);
             }
             VpnStatus.updateStateString(name, info);
