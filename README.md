@@ -1,5 +1,5 @@
 # NewVpnCore
-Encapsulates the two protocols of OpenVpn and Ikev2, you only need to enter the server IP and port number to realize the connection and status display, and the specific situation of the connection can be displayed at the same time。
+封装了OpenVpn和Ikev2两种协议，只需要输入服务器IP和端口号即可实现连接和状态显示，同时可以显示连接的具体情况。
 
 
 # UniteVpn  Core（第一版）
