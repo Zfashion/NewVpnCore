@@ -2,6 +2,7 @@ package com.core.unitevpn.obj
 
 import android.app.Notification
 import android.content.Context
+import android.graphics.BitmapFactory
 import androidx.core.app.NotificationCompat
 import com.core.unitevpn.R
 import com.core.unitevpn.UniteVpnManager
@@ -12,6 +13,18 @@ import com.core.unitevpn.utils.NetFormatUtils
 
 class DefaultNotification: NotificationImpl {
 
+    companion object {
+
+        @JvmField
+        var notificationIcon = 0
+
+        @JvmField
+        var connectedSmallIcon = 0
+
+        @JvmField
+        var unconnectedSmallIcon = 0
+    }
+
     override fun impl(
         context: Context,
         status: Int,
@@ -20,20 +33,28 @@ class DefaultNotification: NotificationImpl {
         diffIn: Long,
         diffOut: Long
     ): Notification {
+        if (notificationIcon == 0) throw NotificationIconResourceException("No Notification Icon set!!!")
+        val builder = NotificationCompat.Builder(context,
+            UniteVpnManager.notifyHelper.defNotificationChannel.getChannelId(context)
+        )
+        val iconBitmap = BitmapFactory.decodeResource(context.resources, notificationIcon)
         val title =
             if (status == VpnStatus.CONNECTED) context.getString(getStatusResId(status))
             else context.applicationInfo.loadLabel(context.packageManager)
         val message =
             if (status == VpnStatus.CONNECTED) NetFormatUtils.getNetStat(context, speedIn, diffIn, speedOut, diffOut)
             else context.getString(getStatusResId(status))
-        val builder = NotificationCompat.Builder(
-            context,
-            UniteVpnManager.notifyHelper.defNotificationChannel.getChannelId(context)
-        ).apply {
-            setSmallIcon(R.drawable.ic_vpn_key)
+        if (status == VpnStatus.CONNECTED) {
+            builder.setSmallIcon(if (connectedSmallIcon == 0) R.drawable.ic_vpn_key else connectedSmallIcon)
+        } else {
+            builder.setSmallIcon(if (unconnectedSmallIcon == 0) R.drawable.ic_vpn_key else unconnectedSmallIcon)
+        }
+        builder.apply {
+            setLargeIcon(iconBitmap)
             setContentTitle(title)
             setContentText(message)
-            setContentIntent(UniteVpnManager.notifyHelper.getVpnPendingIntent(context))
+            val vpnPendingIntent = UniteVpnManager.notifyHelper.getVpnPendingIntent(context)
+            if (vpnPendingIntent != null) setContentIntent(vpnPendingIntent)
         }
         return builder.build()
     }
@@ -48,4 +69,6 @@ class DefaultNotification: NotificationImpl {
             else -> status
         }
     }
+
+    internal class NotificationIconResourceException(message: String) : RuntimeException(message)
 }

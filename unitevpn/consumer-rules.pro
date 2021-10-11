@@ -11,3 +11,4 @@
 
 -keep class * implements com.core.unitevpn.inter.NotificationChannelImpl
 -keep class * implements com.core.unitevpn.inter.NotificationImpl
+-keepnames class com.core.unitevpn.obj.DefaultNotification$NotificationIconResourceException

@@ -4,6 +4,7 @@ import android.app.Application
 import com.core.ikev2.provide.Ikev2CertHelper
 import com.core.openvpn.provide.OpenCertHelper
 import com.core.unitevpn.UniteVpnManager
+import com.core.unitevpn.obj.DefaultNotification
 import com.core.unitevpn.utils.VPNLog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -13,6 +14,9 @@ class App : Application() {
 
     init {
         VPNLog.d("App init")
+        DefaultNotification.notificationIcon = R.mipmap.ic_launcher_round
+        DefaultNotification.connectedSmallIcon = R.drawable.ic_vpn_connect_key
+        DefaultNotification.unconnectedSmallIcon = R.drawable.ic_vpn_unconnect_key
         UniteVpnManager.pendingClass = MainActivity::class.java
     }
 

@@ -1,20 +1,17 @@
 package com.core.vpnmodule
 
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.lifecycleScope
-import com.core.ikev2.provide.Ikev2Impl
 import com.core.openvpn.provide.OpenVpnImpl
 import com.core.unitevpn.UniteVpnInstance
 import com.core.unitevpn.UniteVpnManager
 import com.core.unitevpn.entity.AutoCombineInfo
 import com.core.unitevpn.entity.AutoInfo
 import com.core.vpnmodule.databinding.ActivityMainBinding
-import com.core.vpnmodule.utils.CertificateUtils
 import java.lang.StringBuilder
 
 class MainActivity : AppCompatActivity() {
