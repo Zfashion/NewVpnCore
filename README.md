@@ -46,7 +46,7 @@ dependencies {
 
 ```kotlin
 class App : Application() {
-	init {
+    init {
         DefaultNotification.notificationIcon = R.mipmap.ic_launcher_round
         DefaultNotification.connectedSmallIcon = R.drawable.ic_vpn_connect_key
         DefaultNotification.unconnectedSmallIcon = R.drawable.ic_vpn_unconnect_key
@@ -59,20 +59,20 @@ class App : Application() {
 
 ```kotlin
 class App : Application() {
-	override fun onCreate() {
-		super.onCreate()
-		//放在协程中去执行
-		CoroutineScope(Dispatchers.Default).launch {
-			//设置Ikev2的证书和属性
-			Ikev2CertHelper.userName = "****"
-           	Ikev2CertHelper.password = "****"
+    override fun onCreate() {
+	super.onCreate()
+	//放在协程中去执行
+	CoroutineScope(Dispatchers.Default).launch {
+	    //设置Ikev2的证书和属性
+	    Ikev2CertHelper.userName = "****"
+            Ikev2CertHelper.password = "****"
             Ikev2CertHelper.remoteId = "****"
             Ikev2CertHelper.storeCertificate("****")
             
             //设置OpenVpn的证书
             OpenCertHelper.setupCert("****")
-		}
 	}
+    }
 }
 ```
 
@@ -88,7 +88,7 @@ private val uniteVpnInstance = UniteVpnInstance(this)
 
 ```kotlin
 class <model类> {
-	init {
+    init {
         UniteVpnManager.addStatusListener(this)
         UniteVpnManager.addByteCountListener(this)
     }
@@ -102,8 +102,8 @@ class <model类> {
 ```kotlin
 //创建连接数据
 val listOf = listOf(
-        AutoCombineInfo(OpenVpnImpl.TYPE, listOf(AutoInfo("服务器名", "ip", "端口", "是否使用udp", "超时时长"))),
-        AutoCombineInfo(Ikev2Impl.TYPE, listOf(AutoInfo(OPEN_NAME, "服务器名", "ip", "端口", "是否使用udp", "超时时长")))
+    AutoCombineInfo(OpenVpnImpl.TYPE, listOf(AutoInfo("服务器名", "ip", "端口", "是否使用udp", "超时时长"))),
+    AutoCombineInfo(Ikev2Impl.TYPE, listOf(AutoInfo(OPEN_NAME, "服务器名", "ip", "端口", "是否使用udp", "超时时长")))
 )
 //调用自动连接
 uniteVpnInstance.autoConnect(listOf)
