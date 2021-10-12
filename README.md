@@ -115,7 +115,7 @@ uniteVpnInstance.autoConnect(listOf)
 uniteVpnInstance.disconnect()
 ```
 
-> 注意：以上调用Api均未挂起函数，需在协程作用域中调用
+> 注意：以上Api均为挂起函数，需在协程作用域中调用使用！
 
 （5）设置应用过滤
 
